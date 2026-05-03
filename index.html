@@ -213,6 +213,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
 .lab-crit-label{font-size:11px;color:var(--text-2);display:flex;justify-content:space-between}
 .lab-preview-row{display:grid;grid-template-columns:36px 1fr 55px 80px 80px 75px 75px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
 .lab-preview-row:hover{background:var(--surface2)}
+.stand-row-wrap:hover .roster-peek{opacity:1!important}
 .rank-up{color:var(--green)}
 .rank-down{color:var(--red)}
 .rank-same{color:var(--text-3)}
@@ -396,8 +397,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
             <input id="manual-player-input" type="text" placeholder="Player name (e.g. Jeremiyah Love)"
               style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px"
               oninput="manualPlayerSearch(this.value)">
-            <input id="manual-pick-input" type="text" placeholder="Pick replaced (e.g. 1.01)"
-              style="width:120px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px">
+
             <button onclick="addManualPlayer()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600">Add to roster</button>
           </div>
           <div id="manual-search-results" style="margin-bottom:10px"></div>
@@ -422,6 +422,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
     <div class="tpanel" id="tab-compare">
       <div class="sec">League standings by dynasty score</div>
       <div class="ptable-wrap" id="standings-wrap" style="margin-bottom:24px"></div>
+
+      <!-- League Compare roster overlay (full page, mirrors My Roster tab) -->
+
+      <!-- Team roster drill-down panel -->
       <div class="sec">Your positional scores vs league</div>
       <div class="g2">
         <div class="scard" id="cmp-bars" style="background:var(--surface)"></div>
@@ -717,7 +721,7 @@ const PLAYER_DB = {
   "Josh Allen":         {ktc:9999,pos:"QB",team:"BUF",age:28,criteria:[98,95,91,97,82,92,97,82,94,80,94,97,88,99,92],startProb:1.0},
   "Lamar Jackson":      {ktc:7716,pos:"QB",team:"BAL",age:27,criteria:[98,96,89,96,85,95,98,78,91,82,95,96,90,98,90],startProb:1.0},
   "Jalen Hurts":        {ktc:7100,pos:"QB",team:"PHI",age:26,criteria:[94,92,87,93,84,91,93,80,89,82,92,95,87,97,91],startProb:1.0},
-  "Joe Burrow":         {ktc:8400,pos:"QB",team:"CIN",age:28,criteria:[95,93,94,92,86,89,95,92,93,84,93,91,89,72,95],startProb:1.0},
+  "Joe Burrow":         {ktc:7800,pos:"QB",team:"CIN",age:28,criteria:[95,93,94,92,86,89,95,92,93,84,93,91,89,72,95],startProb:1.0},
   "C.J. Stroud":        {ktc:7600,pos:"QB",team:"HOU",age:23,criteria:[93,91,90,90,87,88,93,90,91,85,91,89,88,65,90],startProb:1.0},
   "Jayden Daniels":     {ktc:8200,pos:"QB",team:"WAS",age:24,criteria:[90,88,86,88,88,87,90,84,88,86,89,87,87,90,88],startProb:1.0},
   "Caleb Williams":     {ktc:7767,pos:"QB",team:"CHI",age:23,criteria:[82,80,79,80,82,80,81,82,82,84,80,80,83,80,80],startProb:1.0},
@@ -730,11 +734,11 @@ const PLAYER_DB = {
   "Tua Tagovailoa":     {ktc:4200,pos:"QB",team:"MIA",age:27,criteria:[86,85,88,82,85,82,88,86,84,84,83,82,86,58,90],startProb:0.85},
   "Kyler Murray":       {ktc:4800,pos:"QB",team:"ARI",age:27,criteria:[83,80,78,81,79,82,82,79,80,81,80,80,82,88,80],startProb:0.85},
   "Anthony Richardson": {ktc:5800,pos:"QB",team:"IND",age:23,criteria:[72,70,65,74,78,74,70,78,74,82,68,72,74,92,68],startProb:0.85},
-  "Bo Nix":             {ktc:5200,pos:"QB",team:"DEN",age:24,criteria:[76,74,72,72,80,74,74,74,72,80,74,72,76,68,72],startProb:0.85},
+  "Bo Nix":             {ktc:6200,pos:"QB",team:"DEN",age:24,criteria:[76,74,72,72,80,74,74,74,72,80,74,72,76,68,72],startProb:1.0},
   "Will Levis":         {ktc:4200,pos:"QB",team:"TEN",age:25,criteria:[70,68,65,68,76,70,68,72,68,78,68,68,72,65,65],startProb:0.7},
   "Bryce Young":        {ktc:4600,pos:"QB",team:"CAR",age:23,criteria:[66,64,62,64,78,66,64,68,64,80,64,64,70,60,62],startProb:0.7},
   "Shedeur Sanders":    {ktc:7600,pos:"QB",team:"CLE",age:23,criteria:[80,78,78,80,80,80,80,82,80,80,80,80,80,65,80],startProb:0.85,exp:1},
-  "Trevor Lawrence":    {ktc:6600,pos:"QB",team:"JAX",age:25,criteria:[52,54,52,58,52,56,54,64,56,52,56,58,54,52,56],startProb:0.85},
+  "Trevor Lawrence":    {ktc:6600,pos:"QB",team:"JAX",age:25,criteria:[52,54,52,58,52,56,54,64,56,52,56,58,54,52,56],startProb:1.0},
   "Hendon Hooker":      {ktc:2600,pos:"QB",team:"TEN",age:26,criteria:[62,60,58,60,72,62,60,64,60,74,60,60,68,58,58],startProb:0.45},
   "Mac Jones":          {ktc:1400,pos:"QB",team:"JAX",age:27,criteria:[58,56,54,54,70,58,56,58,54,72,56,54,66,40,54],startProb:0.2},
   "Justin Fields":      {ktc:4900,pos:"QB",team:"PIT",age:26,criteria:[74,70,65,72,76,72,70,72,68,78,68,70,72,90,68],startProb:0.7},
@@ -750,8 +754,7 @@ const PLAYER_DB = {
   "Kirk Cousins":       {ktc:1800,pos:"QB",team:"ATL",age:37,criteria:[76,74,72,72,72,70,74,72,72,72,74,72,72,44,74],startProb:0.7},
   "Daniel Jones":       {ktc:800,pos:"QB",team:"MIN",age:28,criteria:[54,52,50,52,72,54,52,54,52,74,52,52,60,60,50],startProb:0.45},
   "Ryan Tannehill":     {ktc:300, pos:"QB",team:"FA", age:36,criteria:[62,60,58,58,68,58,60,58,58,70,60,60,62,44,60],startProb:0.2},
-  "Gardner Minshew":    {ktc:400,pos:"QB",team:"LV", age:28,criteria:[60,58,56,56,70,58,58,58,56,72,58,58,62,50,56],startProb:0.45},
-  "Jacoby Brissett":    {ktc:200, pos:"QB",team:"FA", age:31,criteria:[52,50,48,48,70,50,50,50,48,72,50,50,58,38,48],startProb:0.2},
+    "Jacoby Brissett":    {ktc:200, pos:"QB",team:"FA", age:31,criteria:[52,50,48,48,70,50,50,50,48,72,50,50,58,38,48],startProb:0.2},
 
   // ── RUNNING BACKS (additional) ────────────────────────────────────────────
   "Trey Benson":        {ktc:2356,pos:"RB",team:"ARI",age:23,criteria:[72,62,70,76,74,76,72,58,55,68,70,70,68,76,84]},
@@ -795,15 +798,14 @@ const PLAYER_DB = {
   "Marquez Valdes-S":   {ktc:1200,pos:"WR",team:"FA", age:30,criteria:[68,58,56,66,64,68,60,68,62,76,62,64,52,58,64]},
   "Rondale Moore":      {ktc:800,pos:"WR",team:"ATL",age:24,criteria:[58,52,50,56,54,62,52,58,50,70,52,60,40,48,52]},
   "Parris Campbell":    {ktc:200, pos:"WR",team:"FA", age:28,criteria:[48,44,42,46,44,50,44,50,42,64,44,50,34,40,44]},
-  "Michael Pittman":    {ktc:4200,pos:"WR",team:"IND",age:27,criteria:[78,72,70,74,72,74,70,72,74,82,72,68,70,66,70]},
-  "Josh Downs":         {ktc:4800,pos:"WR",team:"IND",age:23,criteria:[76,68,66,74,70,72,66,66,68,80,68,68,60,64,68]},
-  "Odell Beckham Jr.":  {ktc:600,pos:"WR",team:"MIA",age:32,criteria:[70,54,52,68,64,72,64,74,70,72,58,64,54,62,66]},
+    "Josh Downs":         {ktc:4800,pos:"WR",team:"IND",age:23,criteria:[76,68,66,74,70,72,66,66,68,80,68,68,60,64,68]},
+  
   "Robert Woods":       {ktc:100, pos:"WR",team:"FA", age:32,criteria:[60,50,50,56,54,56,50,56,56,74,52,48,44,46,54]},
   "Hunter Renfrow":     {ktc:300,pos:"WR",team:"LV", age:28,criteria:[64,54,54,60,60,58,50,52,52,78,60,50,46,46,60]},
   "Demarcus Robinson":  {ktc:150, pos:"WR",team:"LAR",age:29,criteria:[52,46,44,50,48,52,48,54,48,66,46,50,38,44,48]},
   "Skyy Moore":         {ktc:1600,pos:"WR",team:"KC", age:24,criteria:[60,52,50,58,56,60,56,62,52,70,54,58,48,52,56]},
   "Mecole Hardman":     {ktc:1000,pos:"WR",team:"KC", age:26,criteria:[62,54,52,62,58,68,60,68,54,72,54,66,46,56,56]},
-  "Kadarius Toney":     {ktc:200, pos:"WR",team:"FA", age:26,criteria:[55,40,42,54,52,58,44,54,54,52,42,58,36,46,48]},
+  
   "Velus Jones Jr.":    {ktc:150, pos:"WR",team:"CHI",age:27,criteria:[46,40,38,44,42,52,44,56,40,62,40,52,32,38,42]},
   "Nelson Agholor":     {ktc:100, pos:"WR",team:"FA", age:31,criteria:[54,44,44,52,50,56,50,60,50,66,48,54,38,44,50]},
   "Nsimba Webster":     {ktc:400,pos:"WR",team:"LAR",age:27,criteria:[52,46,44,50,48,54,48,56,46,66,46,52,36,42,48]},
@@ -814,7 +816,7 @@ const PLAYER_DB = {
   "Sterling Shepard":   {ktc:50, pos:"WR",team:"FA", age:31,criteria:[54,46,46,50,50,50,42,44,48,70,48,42,38,38,50]},
   "Donovan Peoples-J":  {ktc:1400,pos:"WR",team:"CLE",age:27,criteria:[60,52,50,58,54,62,56,64,52,70,52,60,44,50,54]},
   "Khalil Shakir":      {ktc:5000,pos:"WR",team:"BUF",age:25,criteria:[74,66,64,72,68,70,62,62,64,78,66,64,56,62,66]},
-  "Dontayvion Wicks":   {ktc:3800,pos:"WR",team:"GB", age:24,criteria:[76,66,64,74,72,76,72,82,72,78,68,78,60,72,70]},
+  
 
   // ── TIGHT ENDS (additional) ───────────────────────────────────────────────
   "Brevin Jordan":      {ktc:2600,pos:"TE",team:"HOU",age:24,criteria:[68,64,66,78,78,64,62,60,58,62,62,64,72,56,62]},
@@ -838,10 +840,10 @@ const PLAYER_DB = {
   // ── RUNNING BACKS ─────────────────────────────────────────────────────────
   // criteria: [epa_rush,epa_tgt,succ_rate,yac,mtf,expl_run,stuff,yprr,tgt_rr,catch_rt,pass_pro,snap_sh,rz_touch,brkwy,fmb]
   "Bijan Robinson":     {ktc:9999,pos:"RB",team:"ATL",age:23,criteria:[95,92,93,94,96,93,90,88,85,92,86,94,92,91,95]},
-  "Jonathan Taylor":    {ktc:5800,pos:"RB",team:"IND",age:26,criteria:[90,82,89,91,88,92,88,72,68,88,80,88,85,90,92]},
+  "Jonathan Taylor":    {ktc:5900,pos:"RB",team:"IND",age:26,criteria:[90,82,89,91,88,92,88,72,68,88,80,88,85,90,92]},
   "Christian McCaffrey":{ktc:4800,pos:"RB",team:"SF", age:28,criteria:[95,98,94,92,95,88,92,98,96,98,95,92,95,85,98]},
   "Breece Hall":        {ktc:8200,pos:"RB",team:"NYJ",age:24,criteria:[88,84,86,90,92,91,87,82,80,88,82,88,87,92,90]},
-  "De'Von Achane":      {ktc:8900,pos:"RB",team:"MIA",age:23,criteria:[90,86,88,92,90,96,88,84,82,90,78,84,85,96,88]},
+  "De'Von Achane":      {ktc:7800,pos:"RB",team:"MIA",age:23,criteria:[90,86,88,92,90,96,88,84,82,90,78,84,85,96,88]},
   "Jahmyr Gibbs":       {ktc:9640,pos:"RB",team:"DET",age:23,criteria:[91,90,89,90,92,90,89,90,88,92,82,86,88,90,92]},
   "Kyren Williams":     {ktc:6200,pos:"RB",team:"LAR",age:24,criteria:[86,80,85,88,84,84,85,74,70,84,80,90,92,82,88]},
   "Rachaad White":      {ktc:3600,pos:"RB",team:"TB", age:26,criteria:[78,82,78,80,78,76,78,84,82,88,80,82,76,72,90]},
@@ -850,7 +852,7 @@ const PLAYER_DB = {
   "Travis Etienne":     {ktc:4600,pos:"RB",team:"JAX",age:26,criteria:[82,80,80,84,82,84,80,78,75,86,80,84,80,84,88]},
   "Saquon Barkley":     {ktc:4200,pos:"RB",team:"PHI",age:28,criteria:[88,80,86,90,92,90,84,75,72,86,82,90,86,92,86]},
   "Derrick Henry":      {ktc:2200,pos:"RB",team:"BAL",age:31,criteria:[86,62,84,88,86,88,80,55,50,72,76,88,88,94,84]},
-  "James Cook":         {ktc:6400,pos:"RB",team:"BUF",age:25,criteria:[84,82,82,86,84,88,82,80,78,86,78,82,80,88,88]},
+  "James Cook":         {ktc:6100,pos:"RB",team:"BUF",age:25,criteria:[84,82,82,86,84,88,82,80,78,86,78,82,80,88,88]},
   "Jerome Ford":        {ktc:2800,pos:"RB",team:"CLE",age:25,criteria:[74,70,72,76,74,76,74,68,65,76,74,74,72,76,84]},
   "Zamir White":        {ktc:2200,pos:"RB",team:"LV", age:25,criteria:[70,62,70,72,70,72,72,58,55,68,72,68,68,70,82]},
   "Chuba Hubbard":      {ktc:3200,pos:"RB",team:"CAR",age:26,criteria:[74,68,72,76,72,74,74,65,62,74,74,76,72,72,84]},
@@ -863,7 +865,7 @@ const PLAYER_DB = {
   "Blake Corum":        {ktc:3800,pos:"RB",team:"LAR",age:23,criteria:[72,66,72,74,72,74,72,60,58,70,72,72,68,72,84]},
   "TreVeyon Henderson": {ktc:4600,pos:"RB",team:"NE", age:23,criteria:[74,70,72,76,74,76,72,66,62,74,72,74,70,76,86]},
   "Quinshon Judkins":   {ktc:5600,pos:"RB",team:"CLE",age:22,criteria:[76,70,74,78,76,78,74,65,62,74,73,76,72,78,85]},
-  "Ashton Jeanty":      {ktc:8100,pos:"RB",team:"LV", age:22,criteria:[84,74,82,88,86,90,80,68,65,78,76,82,80,92,86],exp:1},
+  "Ashton Jeanty":      {ktc:7600,pos:"RB",team:"LV", age:22,criteria:[84,74,82,88,86,90,80,68,65,78,76,82,80,92,86],exp:1},
   "RJ Harvey":          {ktc:4400,pos:"RB",team:"DEN",age:23,criteria:[74,68,72,76,74,76,72,65,62,74,72,74,70,76,84]},
   "Isaiah Davis":       {ktc:400, pos:"RB",team:"NYJ",age:23,criteria:[40,35,42,45,40,42,42,32,30,40,42,30,30,44,60]},
   "Clyde Edwards-H":    {ktc:600,pos:"RB",team:"FA", age:27,criteria:[58,58,58,58,58,56,60,58,56,68,68,48,50,52,70]},
@@ -877,7 +879,7 @@ const PLAYER_DB = {
   "Malik Nabers":       {ktc:7811,pos:"WR",team:"NYG",age:22,criteria:[86,84,84,86,84,86,84,80,82,86,84,84,82,82,84]},
   "Marvin Harrison Jr.":{ktc:7200,pos:"WR",team:"ARI",age:22,criteria:[87,84,84,88,85,88,86,86,84,86,84,84,82,84,86]},
   "Amon-Ra St. Brown":  {ktc:7725,pos:"WR",team:"DET",age:25,criteria:[94,90,90,92,90,88,82,74,82,94,90,82,88,88,90]},
-  "Davante Adams":      {ktc:2800,pos:"WR",team:"NYJ",age:32,criteria:[92,84,88,90,92,94,82,78,90,96,88,78,86,86,96]},
+  
   "Tyreek Hill":        {ktc:4200,pos:"WR",team:"MIA",age:31,criteria:[90,88,86,86,84,94,92,88,80,88,82,96,80,84,90]},
   "Stefon Diggs":       {ktc:1200,pos:"WR",team:"FA", age:31,criteria:[85,80,82,84,86,90,78,76,82,90,82,78,80,78,88]},
   "Drake London":       {ktc:5800,pos:"WR",team:"ATL",age:23,criteria:[82,82,80,80,80,80,80,78,84,82,78,76,84,78,78]},
@@ -899,11 +901,11 @@ const PLAYER_DB = {
   "Mike Evans":         {ktc:3600,pos:"WR",team:"TB", age:32,criteria:[86,80,80,88,82,78,82,82,92,88,80,76,88,90,82]},
   "Calvin Ridley":      {ktc:2200,pos:"WR",team:"TEN",age:30,criteria:[82,74,76,82,80,84,80,80,80,84,76,78,72,76,80]},
   "Cooper Kupp":        {ktc:2400,pos:"WR",team:"LAR",age:32,criteria:[90,80,84,88,88,84,74,72,80,92,86,72,84,82,88]},
-  "Davante Adams":      {ktc:2800,pos:"WR",team:"NYJ",age:32,criteria:[92,82,86,90,90,92,78,76,88,94,86,76,84,84,94]},
+  
   "Wan'Dale Robinson":  {ktc:2400,pos:"WR",team:"NYG",age:24,criteria:[76,70,72,74,76,74,66,64,70,82,72,68,62,66,72]},
-  "Dontayvion Wicks":   {ktc:3800,pos:"WR",team:"GB", age:24,criteria:[76,66,64,74,72,76,72,82,72,78,68,78,60,72,70]},
+  
   "Rashod Bateman":     {ktc:1400,pos:"WR",team:"BAL",age:25,criteria:[76,62,62,74,72,76,72,80,72,78,66,74,56,68,70]},
-  "Odell Beckham Jr.":  {ktc:2800,pos:"WR",team:"FA", age:32,criteria:[72,58,58,72,68,76,68,78,74,76,62,68,58,68,72]},
+  
   "Jerry Jeudy":        {ktc:3200,pos:"WR",team:"CLE",age:26,criteria:[80,72,72,78,76,80,78,82,76,80,72,76,64,70,76]},
   "Treylon Burks":      {ktc:1200,pos:"WR",team:"TEN",age:24,criteria:[70,60,60,68,66,68,68,76,66,72,62,68,54,62,64]},
   "Elijah Moore":       {ktc:1400,pos:"WR",team:"CLE",age:24,criteria:[72,60,62,70,68,72,64,68,64,76,64,70,54,62,66]},
@@ -917,8 +919,8 @@ const PLAYER_DB = {
   // ── TIGHT ENDS ────────────────────────────────────────────────────────────
   // criteria: [yprr,tgt_rr,epa_tgt,catch_rt,drop,fd_tgt,rz_tgt,cont_catch,blk_win,pass_blk,inline_pct,snap_sh,yac,expl,td_rate]
   "Sam LaPorta":        {ktc:6200,pos:"TE",team:"DET",age:24,criteria:[88,86,86,90,90,86,84,82,66,72,72,88,84,80,86]},
-  "Brock Bowers":       {ktc:7956,pos:"TE",team:"LV", age:22,criteria:[92,90,90,94,92,90,86,84,64,70,70,90,90,84,88]},
-  "Trey McBride":       {ktc:7200,pos:"TE",team:"ARI",age:25,criteria:[90,88,88,92,90,88,86,84,74,78,78,90,86,78,86]},
+  "Brock Bowers":       {ktc:8100,pos:"TE",team:"LV", age:22,criteria:[92,90,90,94,92,90,86,84,64,70,70,90,90,84,88]},
+  "Trey McBride":       {ktc:7600,pos:"TE",team:"ARI",age:25,criteria:[90,88,88,92,90,88,86,84,74,78,78,90,86,78,86]},
   "Travis Kelce":       {ktc:3200,pos:"TE",team:"KC", age:35,criteria:[96,90,94,96,96,92,92,92,78,82,74,88,90,82,94]},
   "Mark Andrews":       {ktc:4400,pos:"TE",team:"BAL",age:29,criteria:[90,84,90,92,92,88,90,88,72,76,72,84,82,80,92]},
   "Dallas Goedert":     {ktc:5600,pos:"TE",team:"PHI",age:29,criteria:[90,84,88,92,92,86,86,82,74,78,74,84,88,78,86]},
@@ -934,7 +936,7 @@ const PLAYER_DB = {
   "Cole Kmet":          {ktc:3000,pos:"TE",team:"CHI",age:25,criteria:[74,70,70,82,84,72,72,68,78,80,82,74,70,62,72]},
   "Tucker Kraft":       {ktc:5000,pos:"TE",team:"GB", age:24,criteria:[76,74,74,84,86,74,74,70,74,76,78,76,76,68,74]},
   "Theo Johnson":       {ktc:4400,pos:"TE",team:"NYG",age:23,criteria:[72,70,70,80,82,70,70,66,72,74,76,70,74,66,70]},
-  "Colston Loveland":   {ktc:6400,pos:"TE",team:"CHI",age:22,criteria:[80,78,78,86,86,78,76,74,70,74,74,78,80,74,76],exp:1},
+  
   "Tyler Warren":       {ktc:6800,pos:"TE",team:"IND",age:23,criteria:[82,80,80,88,86,80,80,76,74,76,76,80,82,76,80]},
   "Jonnu Smith":        {ktc:1400,pos:"TE",team:"MIA",age:29,criteria:[76,72,74,84,84,74,72,70,70,72,72,72,80,70,72]},
 
@@ -960,8 +962,8 @@ const PLAYER_DB = {
     "Caleb Douglas":         {ktc:200,pos:"WR",team:"FA",age:22,criteria:[64,60,58,62,60,62,60,68,62,72,60,60,56,60,62],exp:0},
     "Chris Bell":            {ktc:3500,pos:"WR",team:"BAL",age:21,criteria:[69,65,63,67,65,67,65,73,67,77,65,65,61,65,67],exp:0},
     "Omar Cooper Jr":        {ktc:5800,pos:"WR",team:"DEN",age:21,criteria:[70,66,64,68,66,68,66,74,68,78,66,66,62,66,68],exp:0},
-    "Kevin Coleman Jr":      {ktc:600,pos:"WR",team:"KC",age:22,criteria:[64,60,58,62,60,62,60,68,62,72,60,60,56,60,62],exp:0},
-    "Cyrus Allen":           {ktc:300,pos:"WR",team:"FA",age:22,criteria:[64,60,58,62,60,62,60,68,62,72,60,60,56,60,62],exp:0},
+    
+    
   "Emmanuel Henderson Jr":{ktc:600,pos:"WR",team:"FA",age:23,criteria:[54,48,46,52,50,56,50,52,46,64,46,50,38,52,48]},
 
   // TEs
@@ -972,15 +974,15 @@ const PLAYER_DB = {
   // ── 2025 ROOKIE CLASS (last year) ───────────────────────────────────────────
 
   // ROOKIE QBs
-  "Makai Lemon":           {ktc:7400,pos:"QB",team:"TEN",age:23,criteria:[82,80,80,82,78,80,82,84,82,78,80,80,80,86,80],startProb:1.0,exp:1},
+  
   "Jared Goff":         {ktc:5800,pos:"QB",team:"DET",age:30,criteria:[88,86,90,84,84,86,88,80,84,82,86,86,86,55,88],startProb:1.0},
   "Baker Mayfield":     {ktc:5200,pos:"QB",team:"TB", age:30,criteria:[82,80,78,80,78,80,82,78,78,78,80,80,82,65,78],startProb:1.0},
   "Derek Carr":         {ktc:2800,pos:"QB",team:"NO", age:34,criteria:[76,74,74,74,74,72,76,72,72,72,74,74,76,48,74],startProb:0.70},
   "Aaron Rodgers":      {ktc:3200,pos:"QB",team:"NYJ",age:41,criteria:[82,78,80,78,76,76,82,80,80,76,78,78,76,60,84],startProb:0.70},
   "Andy Dalton":        {ktc:400, pos:"QB",team:"FA", age:37,criteria:[62,60,58,60,66,58,62,58,58,66,60,60,64,42,60],startProb:0.20},
-  "Jacoby Brissett":    {ktc:200, pos:"QB",team:"FA", age:32,criteria:[54,52,50,50,68,52,52,50,50,70,52,52,58,38,50],startProb:0.20},
+  
   "Dillon Gabriel":     {ktc:2400,pos:"QB",team:"CLE",age:24,criteria:[76,78,80,74,80,74,76,72,72,80,78,74,82,62,78],startProb:0.3,exp:1},
-  "Tez Johnson":        {ktc:3200,pos:"QB",team:"MIA",age:22,criteria:[72,70,72,70,74,70,72,76,70,74,70,70,74,58,72],startProb:0.45,exp:1},
+  
   "Tyler Shough":       {ktc:1800,pos:"QB",team:"NO", age:25,criteria:[66,64,64,66,72,66,66,68,64,72,64,64,68,60,64],startProb:0.35},
 
   // ROOKIE RBs
@@ -990,34 +992,34 @@ const PLAYER_DB = {
   "Dylan Sampson":      {ktc:4400,pos:"RB",team:"TEN",age:22,criteria:[74,64,72,78,78,80,74,56,52,66,66,70,68,82,80],exp:1},
   "Cam Skattebo":       {ktc:5600,pos:"RB",team:"NYG",age:23,criteria:[76,70,74,80,80,78,76,68,64,74,72,74,76,80,82],exp:1},
   "Damien Martinez":    {ktc:3800,pos:"RB",team:"IND",age:22,criteria:[72,62,70,78,76,74,72,56,52,64,66,68,66,76,80],exp:1},
-  "Savion Williams":         {ktc:2800,pos:"RB",team:"JAX",age:23,criteria:[68,62,66,72,72,72,68,60,56,66,64,64,62,72,78],exp:1},
-  "Kyle Monangai":      {ktc:2200,pos:"RB",team:"NYJ",age:23,criteria:[64,58,62,68,68,68,66,54,50,62,60,60,58,66,76],exp:1},
+  
+  
   "Ollie Gordon II":    {ktc:3400,pos:"RB",team:"NYJ",age:22,criteria:[70,62,68,74,72,72,70,58,54,66,62,66,64,72,78],exp:1},
 
   // ROOKIE WRs
-  "Emeka Egbuka":       {ktc:5800,pos:"WR",team:"TB", age:22,criteria:[80,74,72,80,76,80,76,76,72,84,74,78,70,72,76],exp:1},
-  "Jack Bech":          {ktc:4200,pos:"WR",team:"LV", age:22,criteria:[74,66,64,72,70,72,68,70,64,80,66,68,60,66,68],exp:1},
-  "Tez Johnson":        {ktc:3200,pos:"WR",team:"DEN",age:22,criteria:[76,64,62,72,68,80,68,72,62,78,64,72,56,68,68],exp:1},
-  "Jaylen Walton":      {ktc:3600,pos:"WR",team:"NYG",age:22,criteria:[72,62,60,68,66,72,64,66,60,76,62,66,54,64,64],exp:1},
-  "Tez Johnson":      {ktc:3200,pos:"WR",team:"TEN",age:22,criteria:[70,62,60,68,66,68,64,68,60,76,62,64,56,62,62],exp:1},
-  "Savion Williams":    {ktc:2800,pos:"WR",team:"CHI",age:22,criteria:[68,60,58,68,64,66,64,64,58,74,60,62,54,60,60],exp:1},
+  "Emeka Egbuka":       {ktc:6200,pos:"WR",team:"TB", age:22,criteria:[80,74,72,80,76,80,76,76,72,84,74,78,70,72,76],exp:1},
+  
+  
+  
+  
+  
   "Dont'e Thornton":    {ktc:2200,pos:"WR",team:"NE", age:23,criteria:[66,56,54,66,62,72,60,70,54,72,56,64,48,66,56]},
   "Jaylin Noel":        {ktc:2000,pos:"WR",team:"HOU",age:22,criteria:[64,58,58,62,62,64,62,64,56,74,58,62,50,60,60]},
   "Isaiah Bond":        {ktc:1800,pos:"WR",team:"NE", age:21,criteria:[62,56,56,60,62,66,60,66,54,72,56,60,48,62,58]},
 
   // ROOKIE TEs
-  "Colston Loveland":   {ktc:6400,pos:"TE",team:"CLE",age:22,criteria:[82,80,80,86,86,78,78,76,62,68,68,78,78,70,76],exp:1},
+  
   "Mason Taylor":       {ktc:5200,pos:"TE",team:"NYJ",age:22,criteria:[76,74,74,82,82,72,72,70,60,64,64,74,72,64,70],exp:1},
-  "Jaylen Walton":        {ktc:3600,pos:"TE",team:"PHI",age:23,criteria:[72,70,70,78,78,68,68,66,62,64,62,70,66,62,66],exp:1},
-  "Savion Williams":      {ktc:2800,pos:"TE",team:"MIA",age:23,criteria:[68,64,66,74,74,64,64,62,58,62,58,66,62,58,62],exp:1},
-  "Kyle Monangai":  {ktc:2200,pos:"TE",team:"LAR",age:23,criteria:[64,60,62,70,72,60,62,58,56,60,56,62,58,54,58],exp:1},
+  
+  
+  
 
     "Carnell Tate":          {ktc:7800,pos:"WR",team:"CHI",age:21,criteria:[71,67,65,69,67,69,67,75,69,79,67,67,63,67,69],exp:0},
   "Kevin Coleman Jr":   {ktc:900, pos:"WR",team:"FA", age:22,criteria:[56,50,48,54,52,58,52,56,48,66,48,52,40,56,50]},
   "Cyrus Allen":        {ktc:650, pos:"WR",team:"FA", age:23,criteria:[52,46,44,50,48,54,48,52,44,62,44,48,36,50,46]},
-  "Emmett Johnson":     {ktc:700, pos:"RB",team:"FA", age:23,criteria:[56,50,54,58,56,58,56,46,44,54,54,52,50,58,74]},
-  "Garrett Nussmeier":  {ktc:800, pos:"QB",team:"FA", age:23,criteria:[62,60,60,60,70,62,62,64,60,70,60,60,64,58,60],startProb:0.25},
-  "Jack Bech":     {ktc:4200,pos:"WR",team:"DEN",age:23,criteria:[76,66,64,72,68,76,70,78,66,78,64,66,58,68,68],exp:1},
+  
+  
+  
   // 2026 NFL Draft class — from Book1NFLDRAFT.xlsx
   "Jordyn Tyson":          {ktc:7000,pos:"WR",team:"CLE",age:21,criteria:[71,67,65,69,67,69,67,75,69,79,67,67,63,67,69],exp:0},
   "KC Concepcion":         {ktc:6100,pos:"WR",team:"NYG",age:21,criteria:[70,66,64,68,66,68,66,74,68,78,66,66,62,66,68],exp:0},
@@ -1049,7 +1051,7 @@ const PLAYER_DB = {
   "Jaydn Ott":             {ktc:200,pos:"RB",team:"FA",age:22,criteria:[62,58,60,65,62,62,60,52,50,60,60,64,56,58,70],exp:0},
   "Barion Brown":          {ktc:200,pos:"WR",team:"FA",age:22,criteria:[64,60,58,62,60,62,60,68,62,72,60,60,56,60,62],exp:0},
   // Players from All_Dynasty_Rankings.csv
-  "George Pickens":        {ktc:5000,pos:"WR",team:"DAL",age:26,criteria:[68,60,60,60,60,60,60,68,60,60,60,60,52,52,60]},
+  "George Pickens":        {ktc:6000,pos:"WR",team:"DAL",age:26,criteria:[68,60,60,60,60,60,60,68,60,60,60,60,52,52,60]},
   "Nico Collins":          {ktc:5099,pos:"WR",team:"HOU",age:26,criteria:[68,60,60,60,60,60,60,68,60,60,60,60,53,53,60]},
   "Kenneth Walker III":    {ktc:3100,pos:"RB",team:"KC",age:26,criteria:[61,54,61,61,54,54,48,54,54,54,54,61,54,48,48]},
   "Bucky Irving":          {ktc:2600,pos:"RB",team:"TB",age:26,criteria:[59,53,59,59,53,53,46,53,53,53,53,59,53,46,46]},
@@ -1060,8 +1062,8 @@ const PLAYER_DB = {
   "Jayden Higgins":        {ktc:1900,pos:"WR",team:"HOU",age:26,criteria:[57,51,51,51,51,51,51,57,51,51,51,51,45,45,51]},
   "DJ Moore":              {ktc:1800,pos:"WR",team:"BUF",age:26,criteria:[56,50,50,50,50,50,50,56,50,50,50,50,44,44,50]},
   "DK Metcalf":            {ktc:1700,pos:"WR",team:"PIT",age:26,criteria:[56,50,50,50,50,50,50,56,50,50,50,50,44,44,50]},
-  "Justin Herbert":        {ktc:6299,pos:"QB",team:"LAC",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
-  "Jaxon Dart":            {ktc:6199,pos:"QB",team:"NYG",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
+  "Justin Herbert":        {ktc:6800,pos:"QB",team:"LAC",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
+  "Jaxon Dart":            {ktc:6600,pos:"QB",team:"NYG",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
   "Kyle Pitts":            {ktc:1400,pos:"TE",team:"ATL",age:26,criteria:[49,49,49,55,55,49,44,49,44,44,49,55,49,44,44]},
   "Jayden Reed":           {ktc:1500,pos:"WR",team:"GB",age:26,criteria:[55,50,50,50,50,50,50,55,50,50,50,50,44,44,50]},
   "Parker Washington":     {ktc:1400,pos:"WR",team:"JAX",age:26,criteria:[55,49,49,49,49,49,49,55,49,49,49,49,44,44,49]},
@@ -1070,7 +1072,7 @@ const PLAYER_DB = {
   "Chris Godwin":          {ktc:1300,pos:"WR",team:"TB",age:26,criteria:[55,49,49,49,49,49,49,55,49,49,49,49,43,43,49]},
   "Terry McLaurin":        {ktc:1200,pos:"WR",team:"WAS",age:26,criteria:[54,49,49,49,49,49,49,54,49,49,49,49,43,43,49]},
   "Romeo Doubs":           {ktc:1100,pos:"WR",team:"NE",age:26,criteria:[54,48,48,48,48,48,48,54,48,48,48,48,43,43,48]},
-  "Michael Pittman Jr.":   {ktc:1100,pos:"WR",team:"PIT",age:26,criteria:[54,48,48,48,48,48,48,54,48,48,48,48,43,43,48]},
+  "Michael Pittman Jr.":   {ktc:4200,pos:"WR",team:"IND",age:26,criteria:[54,48,48,48,48,48,48,54,48,48,48,48,43,43,48]},
   "Zach Charbonnet":       {ktc:1100,pos:"RB",team:"SEA",age:26,criteria:[54,48,54,54,48,48,43,48,48,48,48,54,48,43,43]},
   "Jakobi Meyers":         {ktc:1100,pos:"WR",team:"JAX",age:26,criteria:[54,48,48,48,48,48,48,54,48,48,48,48,43,43,48]},
   "Courtland Sutton":      {ktc:1100,pos:"WR",team:"DEN",age:26,criteria:[54,48,48,48,48,48,48,54,48,48,48,48,43,43,48]},
@@ -1090,17 +1092,14 @@ const PLAYER_DB = {
   "Jalen McMillan":        {ktc:800,pos:"WR",team:"TB",age:26,criteria:[53,47,47,47,47,47,47,53,47,47,47,47,42,42,47]},
   "Elic Ayomanor":         {ktc:800,pos:"WR",team:"TEN",age:26,criteria:[53,47,47,47,47,47,47,53,47,47,47,47,42,42,47]},
   "Isaac TeSlaa":          {ktc:800,pos:"WR",team:"DET",age:26,criteria:[53,47,47,47,47,47,47,53,47,47,47,47,42,42,47]},
-  "Mike Washington Jr.":   {ktc:700,pos:"RB",team:"LVR",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
-  "Ja'kobi Lane":          {ktc:700,pos:"WR",team:"BAL",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
-  "Tyjae Spears":          {ktc:700,pos:"RB",team:"TEN",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
+      "Tyjae Spears":          {ktc:700,pos:"RB",team:"TEN",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
   "Jaylen Warren":         {ktc:700,pos:"RB",team:"PIT",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
   "J.K. Dobbins":          {ktc:700,pos:"RB",team:"DEN",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
   "Christopher Rodriguez Jr.":{ktc:700,pos:"RB",team:"JAX",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
   "Pat Bryant":            {ktc:700,pos:"WR",team:"DEN",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
   "Jalen Coker":           {ktc:600,pos:"WR",team:"CAR",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
   "Nicholas Singleton":    {ktc:700,pos:"RB",team:"TEN",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
-  "Chris Brazzell":        {ktc:700,pos:"WR",team:"CAR",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
-  "Brandon Aiyuk":         {ktc:700,pos:"WR",team:"FA",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
+    "Brandon Aiyuk":         {ktc:700,pos:"WR",team:"FA",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
   "Deebo Samuel":          {ktc:600,pos:"WR",team:"FA",age:26,criteria:[52,47,47,47,47,47,47,52,47,47,47,47,42,42,47]},
   "Keaton Mitchell":       {ktc:700,pos:"RB",team:"LAC",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
   "Sean Tucker":           {ktc:600,pos:"RB",team:"TB",age:26,criteria:[52,47,52,52,47,47,42,47,47,47,47,52,47,42,42]},
@@ -1376,6 +1375,15 @@ const PLAYER_DB = {
   "LaJohntay Wester":      {ktc:200,pos:"WR",team:"BAL",age:26,criteria:[51,46,46,46,46,46,46,51,46,46,46,46,40,40,46]},
   "Dymere Miller":         {ktc:200,pos:"WR",team:"FA",age:26,criteria:[51,46,46,46,46,46,46,51,46,46,46,46,40,40,46]},
   "Cole Payton":           {ktc:300,pos:"QB",team:"UDFA",age:26,criteria:[51,46,46,46,46,46,51,46,46,46,46,46,46,41,46]},
+  "Davante Adams":      {ktc:2800,pos:"WR",team:"NYJ",age:32,criteria:[92,84,88,90,92,94,82,78,90,96,88,78,86,86,96]},
+  "Colston Loveland":   {ktc:6400,pos:"TE",team:"CLE",age:22,criteria:[82,80,80,86,86,78,78,76,62,68,68,78,78,70,76],exp:1},
+  "Tez Johnson":      {ktc:3200,pos:"WR",team:"TEN",age:22,criteria:[70,62,60,68,66,68,64,68,60,76,62,64,56,62,62],exp:1},
+  "Savion Williams":    {ktc:2800,pos:"WR",team:"CHI",age:22,criteria:[68,60,58,68,64,66,64,64,58,74,60,62,54,60,60],exp:1},
+  "Kyle Monangai":  {ktc:2200,pos:"TE",team:"LAR",age:23,criteria:[64,60,62,70,72,60,62,58,56,60,56,62,58,54,58],exp:1},
+  "Jaylen Walton":      {ktc:3600,pos:"WR",team:"NYG",age:22,criteria:[72,62,60,68,66,72,64,66,60,76,62,66,54,64,64],exp:1},
+  "Odell Beckham Jr.":  {ktc:2800,pos:"WR",team:"FA", age:32,criteria:[72,58,58,72,68,76,68,78,74,76,62,68,58,68,72]},
+  "Dontayvion Wicks":   {ktc:3800,pos:"WR",team:"GB", age:24,criteria:[76,66,64,74,72,76,72,82,72,78,68,78,60,72,70]},
+  "Jack Bech":          {ktc:4200,pos:"WR",team:"LV", age:22,criteria:[74,66,64,72,70,72,68,70,64,80,66,68,60,66,68],exp:1},
 };
 const ROOKIE_NAMES_2026 = new Set(['Fernando Mendoza', 'Ty Simpson', 'Carson Beck', 'Drew Allar', 'Cade Klubnik', 'Taylen Green', 'Garrett Nussmeier', 'Jadarian Price', 'Emmett Johnson', 'Antonio Williams', 'Zavion Thomas', 'Caleb Douglas', 'Chris Bell', 'Omar Cooper Jr', 'Kevin Coleman Jr', 'Cyrus Allen', 'Sam Roush', 'Will Kacmarek', 'Jeremiyah Love', 'Carnell Tate', 'Jordyn Tyson', 'KC Concepcion', 'Denzel Boston', 'Germie Bernard', 'Chris Brazzell II', 'Eli Stowers', 'Zachariah Branch', 'Elijah Sarratt', 'Max Klare', 'Malachi Fields', 'Mike Washington Jr', 'Ted Hurst', 'Skyler Bell', 'Bryce Lance', 'Jonah Coleman', 'Deion Burks', "De'Zhaun Stribling", 'Oscar Delp', 'Brenen Thompson', "Ja'Kobi Lane", 'Justin Joly', 'Michael Trigg', 'Eli Raridon', 'Kaytron Allen', 'Jack Endries', 'Nick Singleton', 'Demond Claiborne', 'Jaydn Ott', 'Barion Brown']);
 
@@ -1738,14 +1746,14 @@ function saveManualAdditions(data) {
 
 function getManualAdditionsForRoster(rosterId) {
   const all = loadManualAdditions();
-  return all[rosterId] || [];
+  return all[String(rosterId)] || [];
 }
 
 function buildRookieAdditionsFromManual(rosters) {
   const all = loadManualAdditions();
   const additions = {};
   rosters.forEach(r => {
-    const manual = all[r.roster_id] || [];
+    const manual = all[String(r.roster_id)] || [];
     additions[r.roster_id] = manual.map(entry => {
       const dbEntry = PLAYER_DB[entry.name];
       const scored = dbEntry ? computePlayerScore(entry.name, dbEntry.pos) : null;
@@ -2687,7 +2695,8 @@ function manualPlayerSearch(query) {
   if (!el) return;
   if (!query || query.length < 2) { el.innerHTML = ''; return; }
   const matches = Object.entries(PLAYER_DB)
-    .filter(([name]) => name.toLowerCase().includes(query.toLowerCase()))
+    .filter(([name]) => normalizeName(name).includes(normalizeName(query)) || name.toLowerCase().includes(query.toLowerCase()))
+    .filter(([name], idx, arr) => arr.findIndex(([n]) => normalizeName(n) === normalizeName(name)) === idx)
     .slice(0, 6);
   if (!matches.length) { el.innerHTML = ''; return; }
   // Use data-name attribute to avoid quote escaping issues in onclick
@@ -2715,7 +2724,6 @@ function selectManualPlayer(name) {
 
 function addManualPlayer() {
   const name = (document.getElementById('manual-player-input')?.value || '').trim();
-  const pick = (document.getElementById('manual-pick-input')?.value || '').trim();
   const statusEl = document.getElementById('manual-status');
 
   if (!name) { if (statusEl) { statusEl.textContent = 'Enter a player name first.'; statusEl.style.color = 'var(--red)'; } return; }
@@ -2734,12 +2742,11 @@ function addManualPlayer() {
     return;
   }
 
-  all[myRosterId].push({ name, pos: dbEntry.pos, dynVal: dbEntry.ktc, replacedPick: pick || null });
+  all[myRidStr].push({ name, pos: dbEntry.pos, dynVal: dbEntry.ktc });
   saveManualAdditions(all);
 
   // Clear inputs
   document.getElementById('manual-player-input').value = '';
-  document.getElementById('manual-pick-input').value = '';
   document.getElementById('manual-search-results').innerHTML = '';
 
   if (statusEl) { statusEl.textContent = `✓ ${name} added — updating rankings...`; statusEl.style.color = 'var(--green)'; }
@@ -2777,8 +2784,8 @@ function applyManualAdditionsLive() {
 
 function removeManualPlayer(name) {
   const all = loadManualAdditions();
-  if (all[myRosterId]) {
-    all[myRosterId] = all[myRosterId].filter(p => p.name !== name);
+  if (all[String(myRosterId)]) {
+    all[String(myRosterId)] = all[String(myRosterId)].filter(p => p.name !== name);
     saveManualAdditions(all);
     renderManualAdditionsList();
     applyManualAdditionsLive();
@@ -3626,7 +3633,8 @@ function tcSearch(side, query) {
 
   // Search DB players
   const dbMatches = Object.entries(PLAYER_DB)
-    .filter(([name]) => name.toLowerCase().includes(q))
+    .filter(([name]) => normalizeName(name).includes(normalizeName(q)) || name.toLowerCase().includes(q))
+    .filter(([name], idx, arr) => arr.findIndex(([n]) => normalizeName(n) === normalizeName(name)) === idx)
     .slice(0, 6)
     .map(([name, e]) => ({ name, dynVal: e.ktc, age: e.age, pos: e.pos, ktc: e.ktc, isRookie: e.exp === 0, isPick: false }));
 
@@ -3927,6 +3935,278 @@ function tcReset() {
 }
 
 
+// ──────────────────────────────────────────────────────────────────────────────
+// LEAGUE COMPARE — TEAM ROSTER FULL-PAGE OVERLAY
+// ──────────────────────────────────────────────────────────────────────────────
+
+let lcCurrentRosterId = null;
+let lcActivePos = 'ALL';
+
+function openLCRoster(rosterId) {
+  rosterId = parseInt(rosterId);
+  lcCurrentRosterId = rosterId;
+  const team = scoredTeams?.find(t => t.rosterId === rosterId);
+  if (!team) return;
+
+  const isMe = rosterId === myRosterId;
+  const overlay = document.getElementById('lc-roster-overlay');
+  if (!overlay) return;
+
+  document.getElementById('lc-roster-title').textContent = team.ownerName + (isMe ? ' (You)' : '') + '’s Roster';
+  document.getElementById('lc-roster-sub').textContent =
+    `${team.players.length} players · ${team.wins}-${team.losses} · Dynasty score: ${Math.round(team.totalScore).toLocaleString()}`;
+  document.getElementById('lc-roster-section-label').textContent =
+    `${team.ownerName}’s players — ranked by dynasty value`;
+
+  // Manual additions panel for ALL teams — useful during live rookie draft
+  const manualWrap = document.getElementById('lc-manual-wrap');
+  if (manualWrap) manualWrap.style.display = 'block';
+  lcRenderManualList();
+
+  // Update manual panel description for current team
+  const descEl = document.getElementById('lc-manual-desc');
+  if (descEl) descEl.textContent = isMe
+    ? 'Add players drafted in the rookie draft not yet on Sleeper'
+    : `Add rookie draft picks to ${team.ownerName}'s roster`;
+
+  // Reset pos filter
+  lcActivePos = 'ALL';
+  document.querySelectorAll('[data-lcpos]').forEach(b => b.classList.toggle('active', b.dataset.lcpos === 'ALL'));
+
+  // Render table
+  lcRenderRosterRows(team.players);
+
+  // Show overlay
+  overlay.style.display = 'block';
+  overlay.style.visibility = 'visible';
+  overlay.style.pointerEvents = 'all';
+  overlay.style.zIndex = '500';
+  overlay.scrollTop = 0;
+}
+
+function closeLCRoster() {
+  const overlay = document.getElementById('lc-roster-overlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '-1';
+    overlay.scrollTop = 0;
+  }
+  lcCurrentRosterId = null;
+  const body = document.getElementById('lc-manual-body');
+  const toggle = document.getElementById('lc-manual-toggle');
+  if (body) body.style.display = 'none';
+  if (toggle) toggle.textContent = '▼ expand';
+}
+
+function lcFilterRoster(btn) {
+  document.querySelectorAll('[data-lcpos]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  lcActivePos = btn.dataset.lcpos;
+  const team = scoredTeams?.find(t => t.rosterId === lcCurrentRosterId);
+  if (team) lcRenderRosterRows(team.players);
+}
+
+function lcRenderRosterRows(allPlayers) {
+  const tbody = document.getElementById('lc-roster-tbody');
+  if (!tbody) return;
+
+  // Build league-wide pos rankings for pos rank column
+  const leaguePosRankings = { QB:[], RB:[], WR:[], TE:[] };
+  scoredTeams.forEach(t => ['QB','RB','WR','TE'].forEach(pos =>
+    (t.byPos?.[pos]||[]).forEach(p => leaguePosRankings[pos].push(p))
+  ));
+  ['QB','RB','WR','TE'].forEach(pos =>
+    leaguePosRankings[pos].sort((a,b) => b.dynVal - a.dynVal)
+  );
+
+  const filtered = allPlayers
+    .filter(p => lcActivePos === 'ALL' || p.pos === lcActivePos)
+    .sort((a,b) => b.dynVal - a.dynVal);
+
+  const maxVal = allPlayers.reduce((m,p) => Math.max(m, p.dynVal||0), 1);
+
+  tbody.innerHTML = '';
+  let rank = 1;
+  filtered.forEach(p => {
+    const pct = Math.round(((p.dynVal||0) / maxVal) * 100);
+    const barColor = p.dynVal > maxVal*0.65 ? 'var(--green)' : p.dynVal > maxVal*0.35 ? 'var(--amber)' : 'var(--text-3)';
+    const rookieBadge = p.isRookie ? `<span class="rookie-badge">2026</span>` : '';
+    const manualBadge = p.valueSource === 'manual' || p.source === 'manual'
+      ? `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(79,196,79,.15);color:var(--green);margin-left:4px;font-weight:500">manual</span>` : '';
+
+    const leaguePosIdx = (leaguePosRankings[p.pos]||[]).findIndex(x => x.name === p.name);
+    const leaguePosRank = leaguePosIdx >= 0 ? `#${leaguePosIdx+1}` : '—';
+
+    const nflTeam = p.nflTeam || p.team || 'FA';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--text-3);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600">${rank}</td>
+      <td style="font-weight:${p.isRookie?'700':'500'};font-size:13px;${p.isRookie?'border-left:2px solid var(--amber);padding-left:10px':''}">${esc(p.name)}${rookieBadge}${manualBadge}</td>
+      <td><span class="pbadge ${p.pos}">${p.pos}</span></td>
+      <td style="color:var(--text-2);font-size:12px">${nflTeam}</td>
+      <td style="color:var(--text-2);font-size:12px">${p.age||'—'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:50px">
+            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div>
+          </div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:${barColor};min-width:44px">${(p.dynVal||0).toLocaleString()}</span>
+        </div>
+      </td>
+      <td style="font-family:'Barlow Condensed',sans-serif;color:var(--text-2)">${leaguePosRank}</td>
+    `;
+    tbody.appendChild(tr);
+    rank++;
+  });
+}
+
+function toggleLCManualPanel() {
+  const body = document.getElementById('lc-manual-body');
+  const toggle = document.getElementById('lc-manual-toggle');
+  if (!body) return;
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if (toggle) toggle.textContent = open ? '▲ collapse' : '▼ expand';
+  if (open) lcRenderManualList();
+}
+
+function lcManualSearch(query) {
+  const el = document.getElementById('lc-manual-search');
+  if (!el) return;
+  if (!query || query.length < 2) { el.innerHTML = ''; return; }
+  const matches = Object.entries(PLAYER_DB)
+    .filter(([name]) => normalizeName(name).includes(normalizeName(query)) || name.toLowerCase().includes(query.toLowerCase()))
+    .filter(([name], idx, arr) => arr.findIndex(([n]) => normalizeName(n) === normalizeName(name)) === idx)
+    .slice(0, 6);
+  if (!matches.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    matches.map(([name, e]) =>
+      `<button data-pname="${esc(name)}" onclick="lcSelectManual(this)"
+        style="padding:4px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text-1);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif">
+        ${esc(name)} <span style="color:var(--text-3)">${e.pos}</span>
+      </button>`
+    ).join('') + '</div>';
+}
+
+function lcSelectManual(btn) {
+  const input = document.getElementById('lc-manual-input');
+  if (input) input.value = btn.dataset.pname;
+  document.getElementById('lc-manual-search').innerHTML = '';
+}
+
+function lcAddManualPlayer() {
+  const name = (document.getElementById('lc-manual-input')?.value || '').trim();
+  const statusEl = document.getElementById('lc-manual-status');
+
+  if (!name) return;
+  const dbEntry = PLAYER_DB[name];
+  if (!dbEntry) {
+    if (statusEl) { statusEl.textContent = `"${name}" not found.`; statusEl.style.color = 'var(--red)'; }
+    return;
+  }
+  const targetId = lcCurrentRosterId || myRosterId;
+  const all = loadManualAdditions();
+  const tidStr = String(targetId);
+  if (!all[tidStr]) all[tidStr] = [];
+  if (all[tidStr].find(p => p.name === name)) {
+    if (statusEl) { statusEl.textContent = `${name} already added.`; statusEl.style.color = 'var(--amber)'; }
+    return;
+  }
+  all[tidStr].push({ name, pos: dbEntry.pos, dynVal: dbEntry.ktc });
+  saveManualAdditions(all);
+  document.getElementById('lc-manual-input').value = '';
+  document.getElementById('lc-manual-search').innerHTML = '';
+  if (statusEl) { statusEl.textContent = `✓ ${name} added`; statusEl.style.color = 'var(--green)'; }
+  applyManualAdditionsLive();
+  // Re-render the overlay roster with fresh data after rescore
+  setTimeout(() => {
+    const team = scoredTeams?.find(t => t.rosterId === targetId);
+    if (team) { lcRenderRosterRows(team.players); lcRenderManualList(); }
+  }, 100);
+}
+
+function lcRefreshRoster(btn) {
+  const targetId = lcCurrentRosterId || myRosterId;
+  if (btn) { btn.textContent = '↻ Refreshing...'; btn.disabled = true; }
+  applyManualAdditionsLive();
+  setTimeout(() => {
+    // Re-fetch the team from the freshly rescored scoredTeams
+    const freshTeam = scoredTeams?.find(t => t.rosterId === targetId);
+    if (freshTeam) {
+      // Re-open the overlay with fresh data — preserves pos filter state
+      const titleEl = document.getElementById('lc-roster-title');
+      const subEl = document.getElementById('lc-roster-sub');
+      const labelEl = document.getElementById('lc-roster-section-label');
+      const isMe = targetId === myRosterId;
+      if (titleEl) titleEl.textContent = freshTeam.ownerName + (isMe ? ' (You)' : '') + '\u2019s Roster';
+      if (subEl) subEl.textContent = `${freshTeam.players.length} players \u00b7 ${freshTeam.wins}-${freshTeam.losses} \u00b7 Dynasty score: ${Math.round(freshTeam.totalScore).toLocaleString()}`;
+      if (labelEl) labelEl.textContent = `${freshTeam.ownerName}\u2019s players \u2014 ranked by dynasty value`;
+      lcRenderRosterRows(freshTeam.players);
+      lcRenderManualList();
+    }
+    if (btn) {
+      btn.textContent = '✓ Refreshed';
+      btn.style.background = 'var(--green)';
+      setTimeout(() => {
+        btn.textContent = '↻ Refresh Roster';
+        btn.style.background = 'var(--accent)';
+        btn.disabled = false;
+      }, 1500);
+    }
+  }, 250);
+}
+
+function lcRemoveManualPlayer(name) {
+  const targetId = lcCurrentRosterId || myRosterId;
+  const all = loadManualAdditions();
+  const tidStr2 = String(targetId);
+  if (all[tidStr2]) {
+    all[tidStr2] = all[tidStr2].filter(p => p.name !== name);
+    saveManualAdditions(all);
+    applyManualAdditionsLive();
+    const team = scoredTeams?.find(t => t.rosterId === targetId);
+    if (team) { lcRenderRosterRows(team.players); }
+    lcRenderManualList();
+  }
+}
+
+function lcRenderManualList() {
+  const el = document.getElementById('lc-manual-list');
+  if (!el) return;
+  const targetId = lcCurrentRosterId || myRosterId;
+  const additions = getManualAdditionsForRoster(targetId);
+  if (!additions.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-3);font-style:italic">No manual additions yet.</div>';
+    return;
+  }
+  el.innerHTML = additions.map(p => {
+    const val = PLAYER_DB[p.name]?.ktc || p.dynVal || '?';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r);margin-bottom:6px">
+      <div style="flex:1">
+        <span style="font-weight:500;font-size:13px">${esc(p.name)}</span>
+        <span style="font-size:11px;color:var(--text-3);margin-left:6px">${p.pos} · KTC ${val}</span>
+        ${p.replacedPick ? `<span style="font-size:11px;color:var(--amber);margin-left:6px">replaces ${esc(p.replacedPick)}</span>` : ''}
+      </div>
+      <button onclick="lcRemoveManualPlayer(${JSON.stringify(p.name)})"
+        style="padding:3px 8px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text-3);cursor:pointer;font-size:11px">Remove</button>
+    </div>`;
+  }).join('');
+}
+
+
+// Name normalization — strips Jr/Sr/II/III/IV suffixes and punctuation for fuzzy matching
+function normalizeName(name) {
+  return name.toLowerCase()
+    .replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v|vi)$/i, '')
+    .replace(/[.']/g, '')
+    .replace(/-/g, ' ')
+    .trim();
+}
+
+
 async function apiFetch(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`Failed to fetch: ${url} (${r.status})`);
@@ -3964,32 +4244,34 @@ function scoreAllTeams(rosters, users, players, liveValues, capitalMap, rookieAd
   return rosters.map(roster => {
     const user = userMap[roster.owner_id] || {};
     // Merge rookie draft picks into this team's roster
-    const rookiePids = (rookieAdditions?.[roster.roster_id] || []).map(r => r.pid);
+    const rookiePids = (rookieAdditions?.[String(roster.roster_id)] || []).map(r => r.pid);
     const rosterPids = [...new Set([...(roster.players || []), ...rookiePids])];
 
     const rPlayers = rosterPids.map(pid => {
       // Check if this player came from rookie draft (not yet on Sleeper roster)
-      const rookieEntry = (rookieAdditions?.[roster.roster_id] || []).find(r => r.pid === pid);
+      const rookieEntry = (rookieAdditions?.[String(roster.roster_id)] || []).find(r => r.pid === pid);
       if (rookieEntry) {
         // Player is from live rookie draft — use their dynasty value directly
+        const dbE = PLAYER_DB[rookieEntry.name];
         return {
           id: pid,
           name: rookieEntry.name,
-          pos: rookieEntry.pos,
-          team: 'Rookie',
-          age: null,
-          exp: 0,
-          status: 'Rookie',
+          pos: rookieEntry.pos || dbE?.pos || 'WR',
+          nflTeam: dbE?.team || 'FA',
+          team: dbE?.team || 'FA',
+          age: dbE?.age || null,
+          exp: dbE?.exp !== undefined ? dbE.exp : 0,
+          status: 'Active',
           injury: null,
           ktc: rookieEntry.dynVal,
           dbName: rookieEntry.name,
           criteriaScore: null,
           dynVal: rookieEntry.dynVal,
-          valueSource: 'rookie-draft',
-          inDB: !!PLAYER_DB[rookieEntry.name],
+          valueSource: 'manual',
+          inDB: !!dbE,
           liveValue: rookieEntry.dynVal,
-          criteria: null,
-          isRookie: true,
+          criteria: dbE?.criteria || null,
+          isRookie: dbE?.exp === 0 || true,
         };
       }
       // Standard path for non-rookie players
@@ -4544,7 +4826,7 @@ async function runAndRender(league) {
 
       standHTML += `<div style="display:grid;grid-template-columns:36px 1fr 60px 60px 60px 60px 60px 60px;gap:0;border-bottom:1px solid var(--border);align-items:center;padding:0 12px;${isMe?'background:var(--accent-dim);border-left:3px solid var(--accent);':''}">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${isMe?'var(--accent)':'var(--text-3)'}">${or}</div>
-        <div style="padding:7px 0"><div style="font-size:13px;font-weight:${isMe?'600':'500'}">${esc(t.ownerName)}${isMe?' <span style="font-size:10px;color:var(--accent)">(You)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${t.wins}-${t.losses} · ${Math.round(t.totalScore).toLocaleString()}</div></div>
+        <div style="padding:7px 0;cursor:pointer" onclick="openLCRoster(${t.rosterId})" title="View roster"><div style="font-size:13px;font-weight:${isMe?'600':'500'}">${esc(t.ownerName)}${isMe?' <span style="font-size:10px;color:var(--accent)">(You)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${t.wins}-${t.losses} · ${Math.round(t.totalScore).toLocaleString()}</div></div>
         <div style="text-align:center;padding:7px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;background:${obg};color:${otx};border-radius:4px;padding:3px 0;min-width:42px;margin:0 auto">${or}</div></div>
         ${cells}
         <div style="text-align:center;padding:7px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;background:${pbg};color:${ptx};border-radius:4px;padding:3px 0;min-width:42px;margin:0 auto">${pr}</div></div>
@@ -5218,5 +5500,71 @@ function el(tag, cls, style) {
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 </script>
+      <div id="lc-roster-overlay" style="display:none;visibility:hidden;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:-1;overflow-y:auto;pointer-events:none">
+        <!-- Overlay app bar -->
+        <div style="background:var(--surface);border-bottom:1px solid var(--border);height:54px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:501">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="closeLCRoster()" style="padding:6px 14px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text-2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">← Back</button>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-1)" id="lc-roster-title">Team Roster</div>
+              <div style="font-size:11px;color:var(--text-3)" id="lc-roster-sub"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content mirrors My Roster tab -->
+        <div style="max-width:1200px;margin:0 auto;padding:24px">
+          <div class="sec" id="lc-roster-section-label">Players — ranked by dynasty value</div>
+
+          <!-- Position filters -->
+          <div class="pos-filter-bar" id="lc-pos-filters" style="margin-bottom:16px">
+            <button class="pos-filter active" data-lcpos="ALL" onclick="lcFilterRoster(this)">All</button>
+            <button class="pos-filter" data-lcpos="QB" onclick="lcFilterRoster(this)">QB</button>
+            <button class="pos-filter" data-lcpos="RB" onclick="lcFilterRoster(this)">RB</button>
+            <button class="pos-filter" data-lcpos="WR" onclick="lcFilterRoster(this)">WR</button>
+            <button class="pos-filter" data-lcpos="TE" onclick="lcFilterRoster(this)">TE</button>
+          </div>
+
+          <!-- Manual additions (my team only) -->
+          <div id="lc-manual-wrap" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleLCManualPanel()">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-1)">➕ Manual Roster Additions</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:2px" id="lc-manual-desc">Add players drafted in the rookie draft not yet on Sleeper</div>
+              </div>
+              <span id="lc-manual-toggle" style="color:var(--text-3);font-size:12px">▼ expand</span>
+            </div>
+            <div id="lc-manual-body" style="display:none;margin-top:12px">
+              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <input id="lc-manual-input" type="text" placeholder="Player name (e.g. Jeremiyah Love)"
+                  style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:13px"
+                  oninput="lcManualSearch(this.value)">
+    
+                <button onclick="lcAddManualPlayer()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600">Add to roster</button>
+              </div>
+              <div id="lc-manual-search" style="margin-bottom:10px"></div>
+              <div id="lc-manual-list"></div>
+              <div id="lc-manual-status" style="font-size:11px;margin-top:8px"></div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                <div style="font-size:11px;color:var(--text-3)">Rankings update instantly when you add or remove players.</div>
+                <button onclick="lcRefreshRoster(this)" style="padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+                  ↻ Refresh Roster
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roster table -->
+          <div class="ptable-wrap">
+            <table class="ptable">
+              <thead><tr>
+                <th>#</th><th>Player</th><th>Pos</th><th>NFL Team</th><th>Age</th>
+                <th>Dynasty Value</th><th>Pos Rank</th>
+              </tr></thead>
+              <tbody id="lc-roster-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 </body>
 </html>
