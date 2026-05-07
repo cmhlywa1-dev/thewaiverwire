@@ -645,7 +645,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
                 <span style="font-size:11px;color:var(--text-2);flex:1">Criteria influence <span class="lab-val" id="lv-nudge">400</span> pts</span>
                 <div class="tip-wrap"><div class="tip-icon">i</div><div class="tip-box">Max points a player can move above or below their KTC based on our 15 performance metrics. 0 = pure KTC. 1200 = criteria fully separates players.</div></div>
               </div>
-              <input type="range" class="lab-slider" id="ls-nudge" min="0" max="1200" step="50" value="400" oninput="updateLab('nudge',this.value)">
+              <input type="range" class="lab-slider" id="ls-nudge" min="0" max="1200" step="50" value="700" oninput="updateLab('nudge',this.value)">
             </div>
           </div>
 
@@ -1587,7 +1587,7 @@ function computePlayerScore(playerName, pos) {
   // Criteria nudge: ±600 pts max
   // Recalibrated so elite performers (score ~85) get +420, average (50) get 0,
   // poor performers (score ~30) get -240. Meaningful but not rank-destroying.
-  const criteriaAdj = (criteriaScore - 50) / 50 * 600;
+  const criteriaAdj = (criteriaScore - 50) / 50 * 700;
   const finalKTC = Math.round(Math.min(9999, Math.max(50,
     (entry.ktc * startProb) + criteriaAdj
   )));
@@ -1611,7 +1611,7 @@ function dynastyValue(playerName, pos) {
 // APP STATE
 // ──────────────────────────────────────────────────────────────────────────────
 let leagueData, usersData, rostersData, playersData;
-let myRosterId, scoredTeams;
+let myRosterId, scoredTeams, currentLeagueId;
 let draftCapitalMap = {};
 let rookieDraftAdditions = {};
 const SLEEPER = 'https://api.sleeper.app/v1';
@@ -1763,7 +1763,10 @@ async function fetchLiveValues(leagueId, players) {
 // Lets the user manually add drafted rookies that haven't appeared on Sleeper
 // rosters yet. Stored in localStorage under a version-independent key.
 // ──────────────────────────────────────────────────────────────────────────────
-const MANUAL_ADDITIONS_KEY = 'tww_manual_additions';
+const MANUAL_ADDITIONS_BASE_KEY = 'tww_manual_additions';
+function getManualKey() {
+  return currentLeagueId ? MANUAL_ADDITIONS_BASE_KEY + '_' + currentLeagueId : MANUAL_ADDITIONS_BASE_KEY;
+}
 
 function loadManualAdditions() {
   try {
@@ -2014,6 +2017,8 @@ document.getElementById('btn-back').addEventListener('click', () => {
 
 async function go() {
   const leagueId = document.getElementById('league-id').value.trim();
+  currentLeagueId = leagueId;
+  currentLeagueId = leagueId;
   const errEl = document.getElementById('err-msg');
   errEl.style.display = 'none';
   if (!leagueId) { errEl.textContent = 'Please enter your Sleeper League ID.'; errEl.style.display = 'block'; return; }
@@ -2056,6 +2061,10 @@ async function go() {
 
     // Step 4: Score all rosters (manual additions included)
     step('ls-score', 'active');
+    await fetchLiveDB();
+    // After live DB loads, reset Player Rankings cache so it rebuilds with fresh values
+    playersTabInited = false;
+    allLeaguePlayers = [];
     scoredTeams = scoreAllTeams(rosters, users, playersData, liveValueMap, draftCapitalMap, rookieDraftAdditions);
     step('ls-score', 'done');
 
@@ -4477,6 +4486,93 @@ function rerenderStandingsWithOutlook() {
   const standEl = document.getElementById('standings-wrap');
   if (standEl) standEl.innerHTML = standHTML;
 }
+
+
+// ── GOOGLE SHEETS LIVE DB ────────────────────────────────────────────────────
+const LIVE_DB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTOv38ILZT77RDDYcI5p0bVRqQQmhRJ0UytaYZ1er_xbs7Bxfi3N5RLatF3Di_E3vWf55UtkKPC_OL0/pub?gid=0&single=true&output=csv';
+
+async function fetchLiveDB() {
+  try {
+    const res = await fetch(LIVE_DB_URL);
+    if (!res.ok) return;
+    const csv = await res.text();
+    const lines = csv.split('\n').filter(l => l.trim());
+    if (!lines.length) return;
+
+    const parseCSVLine = (line) => {
+      const result = []; let cur = ''; let inQ = false;
+      for (let c of line) {
+        if (c === '"') { inQ = !inQ; }
+        else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+        else { cur += c; }
+      }
+      result.push(cur.trim());
+      return result;
+    };
+
+    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+    const idx = (name) => headers.indexOf(name.toLowerCase());
+
+    const iPlayer = idx('player');
+    const iPos    = idx('position');
+    const iTeam   = idx('nfl team');
+    const iKTC    = idx('ktc value');
+    const iAge    = idx('age');
+    const iRookie = idx('rookie 2026');
+    const iExp    = idx('exp');
+    const iSP     = idx('start prob qb');
+
+    if (iPlayer < 0 || iKTC < 0) return;
+
+    let updated = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      const g = (j) => (j >= 0 && cols[j] !== undefined) ? cols[j].trim() : '';
+      const name = g(iPlayer);
+      const ktcStr = g(iKTC);
+      if (!name || !ktcStr || ktcStr === '#N/A') continue;
+      const ktc = parseInt(ktcStr);
+      if (isNaN(ktc) || ktc <= 0) continue;
+
+      if (PLAYER_DB[name]) {
+        PLAYER_DB[name].ktc = ktc;
+        if (g(iPos)) PLAYER_DB[name].pos = g(iPos);
+        if (g(iTeam)) PLAYER_DB[name].team = g(iTeam);
+        if (g(iAge)) PLAYER_DB[name].age = parseInt(g(iAge)) || PLAYER_DB[name].age;
+        if (g(iExp) !== '') PLAYER_DB[name].exp = parseInt(g(iExp));
+        if (g(iSP) !== '') PLAYER_DB[name].startProb = parseFloat(g(iSP));
+        if (g(iRookie).toLowerCase() === 'yes') PLAYER_DB[name].exp = 0;
+        updated++;
+      } else {
+        const pos = g(iPos);
+        if (!['QB','RB','WR','TE'].includes(pos)) continue;
+        PLAYER_DB[name] = {
+          ktc, pos,
+          team: g(iTeam) || 'FA',
+          age: parseInt(g(iAge)) || 25,
+          exp: g(iExp) !== '' ? parseInt(g(iExp)) : 1,
+          criteria: null,
+        };
+        if (g(iSP) !== '') PLAYER_DB[name].startProb = parseFloat(g(iSP));
+        if (g(iRookie).toLowerCase() === 'yes') PLAYER_DB[name].exp = 0;
+        updated++;
+      }
+    }
+    console.log('[WaiverWire] Live DB: ' + updated + ' players synced from Google Sheets');
+    // Show sync indicator in UI
+    const syncEl = document.getElementById('live-db-status');
+    if (syncEl) {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      syncEl.textContent = '● Sheet synced ' + time;
+      syncEl.style.color = 'var(--green)';
+      syncEl.title = updated + ' players loaded from Google Sheets';
+    }
+  } catch(e) {
+    console.warn('[WaiverWire] Live DB fetch failed:', e.message);
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 
 async function apiFetch(url) {
