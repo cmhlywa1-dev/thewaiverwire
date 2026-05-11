@@ -340,7 +340,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
       <div class="app-league" id="app-league-name"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <div id="live-db-status" style="font-size:10px;color:var(--text-3);cursor:default" title="Google Sheets sync status"></div>
+      <div id="live-db-status" style="font-size:10px;color:var(--text-3)" title="Google Sheets sync status"></div>
       <button onclick="window.open('https://forms.gle/MQcPeaarnwsTivjM8','_blank')" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text-2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer">
         💬 Feedback
       </button>
@@ -649,7 +649,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
                 <span style="font-size:11px;color:var(--text-2);flex:1">Criteria influence <span class="lab-val" id="lv-nudge">400</span> pts</span>
                 <div class="tip-wrap"><div class="tip-icon">i</div><div class="tip-box">Max points a player can move above or below their KTC based on our 15 performance metrics. 0 = pure KTC. 1200 = criteria fully separates players.</div></div>
               </div>
-              <input type="range" class="lab-slider" id="ls-nudge" min="0" max="1200" step="50" value="700" oninput="updateLab('nudge',this.value)">
+              <input type="range" class="lab-slider" id="ls-nudge" min="0" max="1200" step="50" value="400" oninput="updateLab('nudge',this.value)">
             </div>
           </div>
 
@@ -1019,7 +1019,7 @@ const PLAYER_DB = {
   
   "Dillon Gabriel":     {ktc:1350,pos:"QB",team:"CLE",age:24,criteria:[76,78,80,74,80,74,76,72,72,80,78,74,82,62,78],startProb:0.3,exp:1},
   
-  "Tyler Shough":       {ktc:3800,pos:"QB",team:"NO", age:25,criteria:[66,64,64,66,72,66,66,68,64,72,64,64,68,60,64],startProb:0.35},
+  "Tyler Shough":       {ktc:1800,pos:"QB",team:"NO", age:25,criteria:[66,64,64,66,72,66,66,68,64,72,64,64,68,60,64],startProb:0.35},
 
   // ROOKIE RBs
     "Jeremiyah Love":        {ktc:7125,pos:"RB",team:"ARI",age:21,criteria:[69,65,67,72,69,69,67,59,57,67,67,71,63,65,77],exp:0},
@@ -1099,6 +1099,7 @@ const PLAYER_DB = {
   "DJ Moore":              {ktc:1800,pos:"WR",team:"BUF",age:26,criteria:[56,50,50,50,50,50,50,56,50,50,50,50,44,44,50]},
   "DK Metcalf":            {ktc:1700,pos:"WR",team:"PIT",age:26,criteria:[56,50,50,50,50,50,50,56,50,50,50,50,44,44,50]},
   "Justin Herbert":        {ktc:6550,pos:"QB",team:"LAC",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
+  "Jaxson Dart":            {ktc:6400,pos:"QB",team:"NYG",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
   "Kyle Pitts":            {ktc:1400,pos:"TE",team:"ATL",age:26,criteria:[49,49,49,55,55,49,44,49,44,44,49,55,49,44,44]},
   "Jayden Reed":           {ktc:1500,pos:"WR",team:"GB",age:26,criteria:[55,50,50,50,50,50,50,55,50,50,50,50,44,44,50]},
   "Parker Washington":     {ktc:1400,pos:"WR",team:"JAX",age:26,criteria:[55,49,49,49,49,49,49,55,49,49,49,49,44,44,49]},
@@ -1419,11 +1420,8 @@ const PLAYER_DB = {
   "Odell Beckham Jr.":  {ktc:2800,pos:"WR",team:"FA", age:32,criteria:[72,58,58,72,68,76,68,78,74,76,62,68,58,68,72]},
   "Dontayvion Wicks":   {ktc:3800,pos:"WR",team:"GB", age:24,criteria:[76,66,64,74,72,76,72,82,72,78,68,78,60,72,70]},
   "Jack Bech":          {ktc:4200,pos:"WR",team:"LV", age:22,criteria:[74,66,64,72,70,72,68,70,64,80,66,68,60,66,68],exp:1},
-  "Tom Brady":          {ktc:50,pos:"QB",team:"FA",age:47,criteria:[50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]},
-  "Drew Brees":          {ktc:50,pos:"QB",team:"FA",age:46,criteria:[50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]},
-  "Jaxson Dart":          {ktc:6400,pos:"QB",team:"NYG",age:26,criteria:[72,64,64,64,64,64,72,64,64,64,64,64,64,56,64]},
 };
-const ROOKIE_NAMES_2026 = new Set(["Jeremiyah Love", "Carnell Tate", "Fernando Mendoza", "Jordyn Tyson", "Makai Lemon", "Jadarian Price", "KC Concepcion", "Kenyon Sadiq", "Omar Cooper Jr", "Ty Simpson", "Eli Stowers", "Denzel Boston", "Jonah Coleman", "Chris Bell", "Germie Bernard", "Nick Singleton", "Elijah Sarratt", "Zachariah Branch", "Chris Brazzell II", "Malachi Fields", "Mike Washington Jr", "Antonio Williams", "Emmett Johnson", "Skyler Bell", "Kaytron Allen", "Ja'Kobi Lane", "Max Klare", "Ted Hurst", "Garrett Nussmeier", "De'Zhaun Stribling", "Kevin Coleman Jr", "Cade Klubnik", "Demond Claiborne", "Michael Trigg", "Carson Beck", "Drew Allar", "Brenen Thompson", "Justin Joly", "Bryce Lance", "Deion Burks", "Zavion Thomas", "Oscar Delp", "Eli Raridon", "Jack Endries", "Caleb Douglas"]);
+const ROOKIE_NAMES_2026 = new Set(['Jeremiyah Love', 'Carnell Tate', 'Fernando Mendoza', 'Jordyn Tyson', 'Makai Lemon', 'Jadarian Price', 'KC Concepcion', 'Kenyon Sadiq', 'Omar Cooper Jr', 'Ty Simpson', 'Eli Stowers', 'Denzel Boston', 'Jonah Coleman', 'Chris Bell', 'Germie Bernard', 'Nick Singleton', 'Elijah Sarratt', 'Zachariah Branch', 'Chris Brazzell II', 'Malachi Fields', 'Mike Washington Jr', 'Antonio Williams', 'Emmett Johnson', 'Skyler Bell', 'Kaytron Allen', "Ja'Kobi Lane", 'Max Klare', 'Ted Hurst', 'Garrett Nussmeier', "De'Zhaun Stribling", 'Kevin Coleman Jr', 'Cade Klubnik', 'Demond Claiborne', 'Michael Trigg', 'Carson Beck', 'Drew Allar', 'Brenen Thompson', 'Justin Joly', 'Bryce Lance', 'Deion Burks', 'Zavion Thomas', 'Oscar Delp', 'Eli Raridon', 'Jack Endries', 'Caleb Douglas']);
 
 
 // Positional criteria labels and weights
@@ -1522,20 +1520,92 @@ function posAgeDecay(pos, age) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 function computePlayerScore(playerName, pos) {
-  // ALL scoring now driven exclusively by Google Sheet column M (liveSheetScore)
-  // No internal formula, age decay, criteria, or SF bonus applied
   if (window._labActive && window._labSettings) {
     return labScore(playerName, pos);
   }
   const entry = PLAYER_DB[playerName];
   if (!entry) return null;
+  // Sheet Final Score (col Q) takes absolute priority over all formula logic
   if (entry.liveSheetScore) {
     return { finalScore: entry.liveSheetScore, criteriaScore: 50 };
   }
-  // Fallback: use raw KTC only (no formula adjustments)
-  return { finalScore: entry.ktc || 0, criteriaScore: 50 };
-}
+  if (!CRITERIA_META[pos]) return null;
+  const meta = CRITERIA_META[pos];
+  const criteria = entry.criteria;
+  if (!criteria || criteria.length !== 15) return null;
 
+  // KTC already reflects age, positional scarcity, and dynasty value.
+  // We apply only a small criteria nudge (±300 pts) to differentiate
+  // players with similar KTC. No multipliers — KTC is the answer.
+  // Position averages: what an average starter scores on each metric (0-100 scale)
+  // Used to normalize raw criteria scores so 50 = genuine league average
+  // Elite players score above 50, backups below 50
+  const POS_AVG = {
+    QB: [62,62,60,55,55,60,62,60,58,55,60,55,58,50,60],
+    RB: [55,55,55,60,58,55,55,50,48,65,55,60,52,50,55],
+    WR: [55,55,52,55,52,52,52,55,52,55,52,50,48,48,52],
+    TE: [52,50,52,62,62,50,48,52,50,52,55,58,52,48,48],
+  };
+  const avgScores = POS_AVG[pos] || POS_AVG.WR;
+
+  let weightedSum = 0, totalWeight = 0;
+  criteria.forEach((raw, i) => {
+    const w = meta.weights[i] || 5;
+    const rawScore = meta.invert.includes(i) ? (100 - raw) : raw;
+    const avg = avgScores[i] || 55;
+    const normalized = 50 + (rawScore - avg) * (50 / (avg > 50 ? avg : (100 - avg)));
+    const clamped = Math.min(99, Math.max(1, normalized));
+    weightedSum += clamped * w;
+    totalWeight += w;
+  });
+  let criteriaScore = weightedSum / totalWeight;
+
+  // ── USAGE FLOOR MULTIPLIER ────────────────────────────────────────────────
+  // Players with genuinely low snap share / target rate get a downward
+  // adjustment to their criteria score. This prevents inflated estimates
+  // from masking limited real-world usage (e.g. WR2s with modest roles).
+  // QB skipped — startProb already handles role/usage for QBs.
+  // Floor of 0.60 prevents over-penalizing handcuffs/developmental players.
+  if (pos !== 'QB') {
+    // Usage index varies by position — pick the two most usage-relevant criteria
+    const usageIdx = {
+      WR: [1, 2],   // target share, targets/route
+      RB: [11, 8],  // snap share, targets/route
+      TE: [11, 1],  // snap share, target rate
+    }[pos] || [11, 2];
+
+    const u1 = criteria[usageIdx[0]] || 50;
+    const u2 = criteria[usageIdx[1]] || 50;
+    // Raw usage score 0-100 (unweighted average of two usage metrics)
+    const rawUsage = (u1 + u2) / 2;
+    // Multiplier: 0.60 floor, 1.0 ceiling, scales linearly with usage
+    // Usage of 50 (average) → multiplier 0.80 (mild discount)
+    // Usage of 75+ (clear starter role) → multiplier ~0.95-1.0 (no real discount)
+    // Usage of 25 (fringe role) → multiplier 0.65 (significant discount)
+    const usageMult = Math.min(1.0, Math.max(0.60, 0.60 + (rawUsage / 100) * 0.40));
+    criteriaScore = criteriaScore * usageMult;
+  }
+
+  // startProb only for backup QBs — confirmed starters = 1.0
+  const startProb = (pos === 'QB') ? (entry.startProb || 1.0) : 1.0;
+
+  // Final = KTC × startProb + small criteria nudge
+  // No age decay (KTC already prices this in)
+  // No superflex multiplier (KTC superflex values are already the input)
+  // Criteria nudge: ±600 pts max
+  // Recalibrated so elite performers (score ~85) get +420, average (50) get 0,
+  // poor performers (score ~30) get -240. Meaningful but not rank-destroying.
+  const criteriaAdj = (criteriaScore - 50) / 50 * 600;
+  const finalKTC = Math.round(Math.min(9999, Math.max(50,
+    (entry.ktc * startProb) + criteriaAdj
+  )));
+
+  return {
+    criteriaScore: Math.round(criteriaScore),
+    finalScore: finalKTC,
+    ktc: entry.ktc
+  };
+}
 
 function dynastyValue(playerName, pos) {
   const entry = PLAYER_DB[playerName];
@@ -1549,7 +1619,7 @@ function dynastyValue(playerName, pos) {
 // APP STATE
 // ──────────────────────────────────────────────────────────────────────────────
 let leagueData, usersData, rostersData, playersData;
-let myRosterId, scoredTeams, currentLeagueId;
+let myRosterId, scoredTeams;
 let draftCapitalMap = {};
 let rookieDraftAdditions = {};
 const SLEEPER = 'https://api.sleeper.app/v1';
@@ -1701,10 +1771,7 @@ async function fetchLiveValues(leagueId, players) {
 // Lets the user manually add drafted rookies that haven't appeared on Sleeper
 // rosters yet. Stored in localStorage under a version-independent key.
 // ──────────────────────────────────────────────────────────────────────────────
-const MANUAL_ADDITIONS_BASE_KEY = 'tww_manual_additions';
-function getManualKey() {
-  return currentLeagueId ? MANUAL_ADDITIONS_BASE_KEY + '_' + currentLeagueId : MANUAL_ADDITIONS_BASE_KEY;
-}
+const MANUAL_ADDITIONS_KEY = 'tww_manual_additions';
 
 function loadManualAdditions() {
   try {
@@ -1955,8 +2022,6 @@ document.getElementById('btn-back').addEventListener('click', () => {
 
 async function go() {
   const leagueId = document.getElementById('league-id').value.trim();
-  currentLeagueId = leagueId;
-  currentLeagueId = leagueId;
   const errEl = document.getElementById('err-msg');
   errEl.style.display = 'none';
   if (!leagueId) { errEl.textContent = 'Please enter your Sleeper League ID.'; errEl.style.display = 'block'; return; }
@@ -2000,7 +2065,6 @@ async function go() {
     // Step 4: Score all rosters (manual additions included)
     step('ls-score', 'active');
     await fetchLiveDB();
-    // After live DB loads, reset Player Rankings cache so it rebuilds with fresh values
     playersTabInited = false;
     allLeaguePlayers = [];
     scoredTeams = scoreAllTeams(rosters, users, playersData, liveValueMap, draftCapitalMap, rookieDraftAdditions);
@@ -3089,7 +3153,7 @@ const SF2_RANKINGS = {
   "Justin Herbert": 6299,
   "RJ Harvey": 1700,
   "Matthew Golden": 1600,
-  "Jaxson Dart": 6199,
+  "Jaxon Dart": 6199,
   "Kenyon Sadiq": 1600,
   "Davante Adams": 1600,
   "Tucker Kraft": 1500,
@@ -4193,13 +4257,6 @@ function lcRenderManualList() {
 
 
 // Name normalization — strips Jr/Sr/II/III/IV suffixes and punctuation for fuzzy matching
-function pfrLink(name, displayName) {
-  const label = displayName || name;
-  const url = `https://www.pro-football-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
-  return `<a href="${url}" target="_blank" rel="noopener" title="View on Pro Football Reference" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--border2)">${esc(label)}</a>`;
-}
-
-
 function normalizeName(name) {
   return name.toLowerCase()
     .replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v|vi)$/i, '')
@@ -4466,7 +4523,7 @@ async function fetchLiveDB() {
     const iRookie = idx('rookie 2026');
     const iExp    = idx('exp');
     const iSP     = idx('start prob qb');
-    const iFinal  = idx('final score (app reads this)');  // col M — precomputed dynasty value
+    const iFinal  = idx('final score (app reads this)');
 
     if (iPlayer < 0) return;
 
@@ -4477,64 +4534,62 @@ async function fetchLiveDB() {
       const name = g(iPlayer);
       if (!name) continue;
 
-      // Use Final Score if available, otherwise fall back to KTC
       const finalStr = iFinal >= 0 ? g(iFinal) : '';
-      const ktcStr   = iKTC >= 0 ? g(iKTC) : '';
-      const scoreStr = (finalStr && finalStr !== '#N/A') ? finalStr : ktcStr;
-      if (!scoreStr || scoreStr === '#N/A') continue;
-      const score = parseInt(scoreStr);
-      if (isNaN(score) || score <= 0) continue;
-      const ktc = ktcStr && ktcStr !== '#N/A' ? (parseInt(ktcStr)||score) : score;
+      const ktcStr   = iKTC  >= 0 ? g(iKTC)   : '';
+      const finalVal = finalStr && finalStr !== '#N/A' && finalStr !== '' ? parseInt(finalStr) : null;
+      const ktcVal   = ktcStr   && ktcStr   !== '#N/A' && ktcStr   !== '' ? parseInt(ktcStr)   : null;
+
+      if (!finalVal && !ktcVal) continue;
 
       if (PLAYER_DB[name]) {
-        PLAYER_DB[name].ktc = ktc;
-        // If sheet has a precomputed final score, store it so formula is bypassed
-        if (iFinal >= 0 && finalStr && finalStr !== '#N/A') {
-          PLAYER_DB[name].liveSheetScore = score;
-        }
-        if (g(iPos)) PLAYER_DB[name].pos = g(iPos);
+        if (ktcVal)   PLAYER_DB[name].ktc = ktcVal;
+        if (finalVal) PLAYER_DB[name].liveSheetScore = finalVal;
+        if (g(iPos))  PLAYER_DB[name].pos  = g(iPos);
         if (g(iTeam)) PLAYER_DB[name].team = g(iTeam);
-        if (g(iAge)) PLAYER_DB[name].age = parseInt(g(iAge)) || PLAYER_DB[name].age;
-        if (g(iExp) !== '') PLAYER_DB[name].exp = parseInt(g(iExp));
-        if (g(iSP) !== '') PLAYER_DB[name].startProb = parseFloat(g(iSP));
+        if (g(iAge))  PLAYER_DB[name].age  = parseInt(g(iAge)) || PLAYER_DB[name].age;
+        if (g(iExp)  !== '') PLAYER_DB[name].exp       = parseInt(g(iExp));
+        if (g(iSP)   !== '') PLAYER_DB[name].startProb = parseFloat(g(iSP));
         if (g(iRookie).toLowerCase() === 'yes') PLAYER_DB[name].exp = 0;
         updated++;
       } else {
         const pos = g(iPos);
         if (!['QB','RB','WR','TE'].includes(pos)) continue;
         PLAYER_DB[name] = {
-          ktc, pos,
-          team: g(iTeam) || 'FA',
+          ktc: ktcVal || 0, pos, team: g(iTeam) || 'FA',
           age: parseInt(g(iAge)) || 25,
           exp: g(iExp) !== '' ? parseInt(g(iExp)) : 1,
           criteria: null,
         };
-        if (g(iSP) !== '') PLAYER_DB[name].startProb = parseFloat(g(iSP));
+        if (g(iSP)   !== '') PLAYER_DB[name].startProb   = parseFloat(g(iSP));
         if (g(iRookie).toLowerCase() === 'yes') PLAYER_DB[name].exp = 0;
-        if (iFinal >= 0 && finalStr && finalStr !== '#N/A') PLAYER_DB[name].liveSheetScore = score;
+        if (finalVal) PLAYER_DB[name].liveSheetScore = finalVal;
         updated++;
       }
     }
     console.log('[WaiverWire] Live DB: ' + updated + ' players synced from Google Sheets');
-    // Debug: log Shedeur Sanders specifically to verify column M is being read
-    const dbg = PLAYER_DB['Shedeur Sanders'];
-    console.log('[WaiverWire] Shedeur Sanders → ktc:', dbg?.ktc, '| liveSheetScore:', dbg?.liveSheetScore);
-    console.log('[WaiverWire] iFinal index was:', iFinal, '| headers found:', headers.join(', '));
-    // Show sync indicator in UI
     const syncEl = document.getElementById('live-db-status');
     if (syncEl) {
       const now = new Date();
-      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      syncEl.textContent = '● Sheet synced ' + time;
+      syncEl.textContent = '● Sheet synced ' + now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' (' + updated + ' players)';
       syncEl.style.color = 'var(--green)';
-      syncEl.title = updated + ' players loaded from Google Sheets';
+      syncEl.title = 'Last synced from Google Sheets. ' + updated + ' players updated.';
     }
+    console.log('[WaiverWire] Sheet headers found:', headers.slice(0,17).join(' | '));
+    const jaEntry = PLAYER_DB['Josh Allen'];
+    console.log('[WaiverWire] Josh Allen after sync → ktc:', jaEntry?.ktc, 'liveSheetScore:', jaEntry?.liveSheetScore);
   } catch(e) {
     console.warn('[WaiverWire] Live DB fetch failed:', e.message);
   }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── PFR LINKS ────────────────────────────────────────────────────────────────
+function pfrLink(name, displayName) {
+  const label = displayName || name;
+  const url = `https://www.pro-football-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+  return `<a href="${url}" target="_blank" rel="noopener" title="View on Pro Football Reference" style="color:inherit;text-decoration:none;border-bottom:1px solid var(--border2)">${esc(label)}</a>`;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 
 async function apiFetch(url) {
@@ -4636,7 +4691,7 @@ function scoreAllTeams(rosters, users, players, liveValues, capitalMap, rookieAd
 
       if (dbEntry) {
         // Known player: always use current DB value, never startup draft position
-        dynVal = scored ? scored.finalScore : (dbEntry.liveSheetScore || dbEntry.ktc);
+        dynVal = scored ? scored.finalScore : dbEntry.ktc;
         valueSource = 'static-db';
       } else if (liveEntry?.ktc) {
         // Unknown player: startup draft position is the only signal we have
@@ -5075,7 +5130,7 @@ async function runAndRender(league) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="color:var(--text-3);font-family:'Barlow Condensed',sans-serif;font-size:14px">${i+1}</td>
-      <td style="font-weight:${p.exp===0?'700':'500'};${p.exp===0?'border-left:2px solid var(--amber);padding-left:10px':''}">${pfrLink(p.name)}${p.exp===0?'<span class=\'rookie-badge\'>2026</span>':''}<span style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:${p.valueSource==='live-draft'?'rgba(45,106,45,.15)':p.valueSource==='live-rank'?'rgba(45,100,180,.12)':'rgba(150,150,150,.1)'};color:${p.valueSource==='live-draft'?'var(--green)':p.valueSource==='live-rank'?'#2d64b4':'var(--text-3)'}">${p.valueSource==='live-draft'?'live':p.valueSource==='live-rank'?'rank':'~est'}</span></td>
+      <td style="font-weight:${p.exp===0?'700':'500'};${p.exp===0?'border-left:2px solid var(--amber);padding-left:10px':''}">${esc(p.name)}${p.exp===0?'<span class=\'rookie-badge\'>2026</span>':''}<span style="font-size:10px;margin-left:5px;padding:1px 5px;border-radius:3px;background:${p.valueSource==='live-draft'?'rgba(45,106,45,.15)':p.valueSource==='live-rank'?'rgba(45,100,180,.12)':'rgba(150,150,150,.1)'};color:${p.valueSource==='live-draft'?'var(--green)':p.valueSource==='live-rank'?'#2d64b4':'var(--text-3)'}">${p.valueSource==='live-draft'?'live':p.valueSource==='live-rank'?'rank':'~est'}</span></td>
       <td><span class="pbadge ${p.pos}">${p.pos}</span></td>
       <td style="color:var(--text-2)">${p.team}</td>
       <td style="color:var(--text-2)">${p.age||'—'}</td>
@@ -5568,7 +5623,7 @@ function buildAllPlayers() {
     const p = pid ? (playersData[pid] || {}) : {};
     const lv = pid ? liveValueMap[pid] : null; // for metadata only, NOT for value
     const scored = computePlayerScore(name, entry.pos);
-    const dynVal = scored ? scored.finalScore : (entry.liveSheetScore || entry.ktc);
+    const dynVal = scored ? scored.finalScore : entry.ktc;
     const ownerInfo = pid ? ownerMap[pid] : null;
     const expVal = entry.exp !== undefined ? entry.exp : (p?.years_exp || 0);
     result.push({
@@ -5659,7 +5714,7 @@ function buildAllPlayers() {
     if (inResultSet.has(name)) return;                 // already in list
     if (!['QB','RB','WR','TE'].includes(entry.pos)) return;
     const scored = computePlayerScore(name, entry.pos);
-    const dynVal = scored ? scored.finalScore : (entry.liveSheetScore || entry.ktc);
+    const dynVal = scored ? scored.finalScore : entry.ktc;
     result.push({
       id: 'db_rookie_' + name.replace(/\s+/g,'_'),
       name,
@@ -5839,7 +5894,7 @@ function renderPlayersTable() {
 
     tr.innerHTML = `
       <td style="color:var(--text-3);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600">${i_global+1}</td>
-      <td style="font-weight:500">${pfrLink(p.name)}${isMine?'<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(45,106,45,.2);color:var(--green);margin-left:5px">Yours</span>':''}${sourceTag}</td>
+      <td style="font-weight:500">${esc(p.name)}${isMine?'<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(45,106,45,.2);color:var(--green);margin-left:5px">Yours</span>':''}${sourceTag}</td>
       <td><span class="pbadge ${p.pos}">${p.pos}</span></td>
       <td style="color:var(--text-2);font-size:12px">${esc(p.nflTeam)}</td>
       <td style="color:var(--text-2);font-size:12px">${p.age||'—'}</td>
@@ -5987,6 +6042,5 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s||''
           </div>
         </div>
       </div>
-
 </body>
 </html>
