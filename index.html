@@ -19,6 +19,12 @@
   --purple:#6b4f9e;--purple-dim:#ede8f8;
   --r:8px;--r-lg:14px;--r-xl:20px;
 }
+/* Custom scrollbar for team picker and overlays */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
 html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6}
 
 /* LANDING */
@@ -4337,10 +4343,7 @@ function rerenderStandingsWithOutlook() {
     outlookCapital: (t.capitalPicks || []).reduce((s,p) => s + projectPlayerValue({...p, isPick:true}, years), 0),
   }));
 
-  // Re-rank by outlook score
-  withScores.sort((a, b) => b.outlookScore - a.outlookScore);
-
-  // Build positional ranks based on outlook
+  // Build positional ranks based on outlook scores
   const standPos = ['QB','RB','WR','TE'];
   const posRanks2 = {};
   standPos.forEach(pos => {
@@ -4353,6 +4356,14 @@ function rerenderStandingsWithOutlook() {
   pickSorted2.forEach((t,i) => { pickRanks2[t.rosterId] = i+1; });
 
   const nS2 = withScores.length;
+
+  // Re-rank by average positional rank (equal weight QB/RB/WR/TE)
+  // Lower average rank = better overall team
+  withScores.forEach(t => {
+    const ranks = standPos.map(pos => posRanks2[pos][t.rosterId] || nS2);
+    t.avgPosRank = ranks.reduce((s,r) => s+r, 0) / ranks.length;
+  });
+  withScores.sort((a, b) => a.avgPosRank - b.avgPosRank);
 
   // Render grid
   let standHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
@@ -4386,10 +4397,9 @@ function rerenderStandingsWithOutlook() {
     const obg = opct<=.25?'#1a6b1a':opct<=.5?'#1a4a35':opct<=.75?'#2a3060':'#6b1a2a';
     const otx = opct<=.25?'#ffffff':opct<=.5?'#a8f0c8':opct<=.75?'#aabbff':'#ffaacc';
 
-    // Show outlook score vs total score
-    const scoreLabel = currentOutlook === 'now'
-      ? Math.round(t.totalScore).toLocaleString()
-      : Math.round(t.outlookScore).toLocaleString() + ' (proj)';
+    // Show avg positional rank
+    const avgRank = t.avgPosRank ? t.avgPosRank.toFixed(1) : '—';
+    const scoreLabel = 'avg pos rank ' + avgRank;
 
     standHTML += `<div style="display:grid;grid-template-columns:36px 1fr 60px 60px 60px 60px 60px 60px;gap:0;border-bottom:1px solid var(--border);align-items:center;padding:0 12px;${isMe?'background:var(--accent-dim);border-left:3px solid var(--accent);':''}">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${isMe?'var(--accent)':'var(--text-3)'}">${or}</div>
@@ -4422,7 +4432,10 @@ async function fetchLiveDB() {
   // Method 1: Direct fetch (works when CORS is allowed)
   try {
     const url = LIVE_DB_URL + '&cachebust=' + Date.now();
-    const r = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (r.ok) { csv = await r.text(); method = 'direct'; }
     else console.warn('[WaiverWire] Direct fetch HTTP error:', r.status);
   } catch(e) {
@@ -4450,6 +4463,30 @@ async function fetchLiveDB() {
       else console.warn('[WaiverWire] corsproxy HTTP error:', r.status);
     } catch(e) {
       console.warn('[WaiverWire] corsproxy failed:', e.message);
+    }
+  }
+
+  // Method 4: thingproxy (another free CORS proxy)
+  if (!csv) {
+    try {
+      const proxy = 'https://thingproxy.freeboard.io/fetch/' + LIVE_DB_URL;
+      const r = await fetch(proxy);
+      if (r.ok) { csv = await r.text(); method = 'thingproxy'; }
+      else console.warn('[WaiverWire] thingproxy HTTP error:', r.status);
+    } catch(e) {
+      console.warn('[WaiverWire] thingproxy failed:', e.message);
+    }
+  }
+
+  // Method 4: thingproxy
+  if (!csv) {
+    try {
+      const proxy = 'https://thingproxy.freeboard.io/fetch/' + LIVE_DB_URL;
+      const r = await fetch(proxy);
+      if (r.ok) { csv = await r.text(); method = 'thingproxy'; }
+      else console.warn('[WaiverWire] thingproxy HTTP error:', r.status);
+    } catch(e) {
+      console.warn('[WaiverWire] thingproxy failed:', e.message);
     }
   }
 
@@ -4741,7 +4778,7 @@ function scoreAllTeams(rosters, users, players, liveValues, capitalMap, rookieAd
 // ──────────────────────────────────────────────────────────────────────────────
 function pickTeam(teams, league, onPick) {
   const ov = el('div','','position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px');
-  const box = el('div','','background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);padding:26px;max-width:440px;width:100%;max-height:80vh;overflow-y:auto');
+  const box = el('div','','background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);padding:26px;max-width:440px;width:100%;max-height:80vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent');
   box.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:5px">Which team is yours?</div><div style="font-size:12px;color:var(--text-3);margin-bottom:18px">${esc(league.name||'')}</div>`;
   teams.forEach((t,i) => {
     const btn = el('button','','width:100%;display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;text-align:left;transition:all .2s;color:var(--text-1);font-family:Barlow,sans-serif');
@@ -5962,7 +5999,7 @@ function el(tag, cls, style) {
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
 </script>
-      <div id="lc-roster-overlay" style="display:none;visibility:hidden;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:-1;overflow-y:auto;pointer-events:none">
+      <div id="lc-roster-overlay" style="display:none;visibility:hidden;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:-1;overflow-y:auto;pointer-events:none;scrollbar-width:thin;scrollbar-color:var(--border2) transparent">
         <!-- Overlay app bar -->
         <div style="background:var(--surface);border-bottom:1px solid var(--border);height:54px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:501">
           <div style="display:flex;align-items:center;gap:12px">
