@@ -1885,20 +1885,31 @@ async function fetchDraftCapital(leagueId, rosters) {
     // Sleeper's traded_picks endpoint returns all future picks and their current owners
     const tradedPicks = await apiFetch(`${SLEEPER}/league/${leagueId}/traded_picks`);
 
-    // Also get picks from roster.draft_picks (original picks not yet traded)
-    // These are picks each team still owns from their original allocation
+    // Build a set of picks that have been traded AWAY from each team
+    // Key: "rosterId_round_season" — these should NOT be counted for the original owner
+    const tradedAwayKeys = new Set();
+    tradedPicks.forEach(pick => {
+      // pick.roster_id = original owner, pick.owner_id = current owner
+      // If they differ, the pick has moved
+      if (pick.roster_id !== pick.owner_id) {
+        tradedAwayKeys.add(`${pick.roster_id}_${pick.round}_${pick.season}`);
+      }
+    });
+
+    // Add original picks — only if NOT traded away
     rosters.forEach(r => {
       const ownedPicks = r.draft_picks || [];
       ownedPicks.forEach(pick => {
         const round = pick.round || 1;
         const season = pick.season || (new Date().getFullYear() + 1).toString();
+        const key = `${r.roster_id}_${round}_${season}`;
+        if (tradedAwayKeys.has(key)) return; // pick was traded away — skip
         const disc = pickYearDiscount(season);
         const baseVal = ROUND_VALUES[round] || 200;
         const value = Math.round(baseVal * disc);
         if (value < 100) return;
         capitalMap[r.roster_id].picks.push({
-          round, season,
-          value,
+          round, season, value,
           label: `${season} ${['1st','2nd','3rd','4th','5th'][round-1]||round+'th'}`,
           source: 'original',
         });
@@ -1906,22 +1917,21 @@ async function fetchDraftCapital(leagueId, rosters) {
       });
     });
 
-    // Add traded picks (these have moved from original owner to new owner)
+    // Add traded picks to the NEW owner
     tradedPicks.forEach(pick => {
-      const ownerRosterId = pick.owner_id;        // current owner
+      if (pick.roster_id === pick.owner_id) return; // hasn't moved
+      const ownerRosterId = pick.owner_id;
       const round = pick.round || 1;
       const season = pick.season || (new Date().getFullYear() + 1).toString();
       const disc = pickYearDiscount(season);
       const baseVal = ROUND_VALUES[round] || 200;
       const value = Math.round(baseVal * disc);
       if (value < 100 || !capitalMap[ownerRosterId]) return;
-
       capitalMap[ownerRosterId].picks.push({
-        round, season,
-        value,
+        round, season, value,
         label: `${season} ${['1st','2nd','3rd','4th','5th'][round-1]||round+'th'}`,
         source: 'traded',
-        originalOwner: pick.roster_id, // who the pick originally belonged to
+        originalOwner: pick.roster_id,
       });
       capitalMap[ownerRosterId].totalValue += value;
     });
@@ -4351,7 +4361,8 @@ function rerenderStandingsWithOutlook() {
     posRanks2[pos] = {};
     sorted.forEach((t,i) => { posRanks2[pos][t.rosterId] = i+1; });
   });
-  const pickSorted2 = [...withScores].sort((a,b) => (b.outlookCapital||0) - (a.outlookCapital||0));
+  // Use capitalScore directly from Sleeper pick data — no projection needed
+  const pickSorted2 = [...withScores].sort((a,b) => (b.capitalScore||0) - (a.capitalScore||0));
   const pickRanks2 = {};
   pickSorted2.forEach((t,i) => { pickRanks2[t.rosterId] = i+1; });
 
