@@ -430,7 +430,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--text-1);font-family:'
     <div class="tpanel" id="tab-compare">
       <!-- Outlook toggle -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-        <div class="sec" style="margin-bottom:0">League standings by dynasty score</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="sec" style="margin-bottom:0">League standings by dynasty score</div>
+          <button onclick="exportLeagueCSV()" style="padding:5px 12px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text-2);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer" title="Download league roster spreadsheet">
+            ⬇ Export
+          </button>
+        </div>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:12px;color:var(--text-3)">Outlook:</span>
           <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex-shrink:0">
@@ -4595,6 +4600,101 @@ function pfrLink(name, displayName) {
   return `<a href="${url}" target="_blank" rel="noopener" title="View on Pro Football Reference"
     style="color:inherit;text-decoration:none;border-bottom:1px solid var(--border2)">${esc(label)}</a>`;
 }
+
+
+// ── LEAGUE EXPORT ─────────────────────────────────────────────────────────────
+function exportLeagueCSV() {
+  if (!scoredTeams?.length) { alert('Load a league first.'); return; }
+
+  // Build positional ranks across league
+  const positions = ['QB','RB','WR','TE'];
+  const leaguePosRanks = {};
+  positions.forEach(pos => {
+    const allPlayers = [];
+    scoredTeams.forEach(t => (t.byPos?.[pos] || []).forEach(p => allPlayers.push({ ...p, ownerName: t.ownerName })));
+    allPlayers.sort((a,b) => b.dynVal - a.dynVal);
+    leaguePosRanks[pos] = {};
+    allPlayers.forEach((p,i) => { leaguePosRanks[pos][p.name] = i+1; });
+  });
+
+  // Build team pos scores and ranks
+  const posTotals = {};
+  positions.forEach(pos => {
+    const sorted = [...scoredTeams].sort((a,b) =>
+      (b.byPos?.[pos]||[]).reduce((s,p)=>s+p.dynVal,0) -
+      (a.byPos?.[pos]||[]).reduce((s,p)=>s+p.dynVal,0)
+    );
+    posTotals[pos] = {};
+    sorted.forEach((t,i) => { posTotals[pos][t.rosterId] = { rank: i+1, score: sorted.find(x=>x.rosterId===t.rosterId) ? (t.byPos?.[pos]||[]).reduce((s,p)=>s+p.dynVal,0) : 0 }; });
+  });
+
+  const rows = [];
+
+  // Header
+  rows.push([
+    'Team Rank','Owner','Team QB Rank','Team QB Score','Team RB Rank','Team RB Score',
+    'Team WR Rank','Team WR Score','Team TE Rank','Team TE Score',
+    'Total Dynasty Score','','Player','Position','NFL Team','Age','Dynasty Value','League Pos Rank'
+  ].join(','));
+
+  // Sort teams by overall rank (avg pos rank)
+  const sorted = [...scoredTeams].map(t => {
+    const ranks = positions.map(pos => posTotals[pos][t.rosterId]?.rank || 12);
+    return { ...t, avgRank: ranks.reduce((s,r)=>s+r,0)/ranks.length };
+  }).sort((a,b) => a.avgRank - b.avgRank);
+
+  sorted.forEach((t, ti) => {
+    const players = [...(t.players||[])].sort((a,b) => b.dynVal - a.dynVal);
+    const teamRank = ti + 1;
+    const qbR = posTotals['QB'][t.rosterId]?.rank || '';
+    const qbS = Math.round(posTotals['QB'][t.rosterId]?.score || 0);
+    const rbR = posTotals['RB'][t.rosterId]?.rank || '';
+    const rbS = Math.round(posTotals['RB'][t.rosterId]?.score || 0);
+    const wrR = posTotals['WR'][t.rosterId]?.rank || '';
+    const wrS = Math.round(posTotals['WR'][t.rosterId]?.score || 0);
+    const teR = posTotals['TE'][t.rosterId]?.rank || '';
+    const teS = Math.round(posTotals['TE'][t.rosterId]?.score || 0);
+    const total = Math.round(t.totalScore || 0);
+
+    players.forEach((p, pi) => {
+      const posRank = leaguePosRanks[p.pos]?.[p.name] || '';
+      const row = [
+        pi === 0 ? teamRank : '',
+        pi === 0 ? t.ownerName : '',
+        pi === 0 ? qbR : '',
+        pi === 0 ? qbS : '',
+        pi === 0 ? rbR : '',
+        pi === 0 ? rbS : '',
+        pi === 0 ? wrR : '',
+        pi === 0 ? wrS : '',
+        pi === 0 ? teR : '',
+        pi === 0 ? teS : '',
+        pi === 0 ? total : '',
+        '',
+        p.name,
+        p.pos,
+        p.nflTeam || p.team || 'FA',
+        p.age || '',
+        Math.round(p.dynVal || 0),
+        posRank
+      ];
+      rows.push(row.map(v => typeof v === 'string' && v.includes(',') ? `"${v}"` : v).join(','));
+    });
+
+    // Blank separator row between teams
+    rows.push('');
+  });
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'WaiverWire_LeagueRosters.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 
 async function apiFetch(url) {
